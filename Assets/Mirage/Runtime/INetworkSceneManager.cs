@@ -10,29 +10,29 @@ namespace Mirage
         UnloadAdditive
     }
 
-    [Serializable] public class ClientSceneChangeEvent : UnityEvent<string, SceneOperation> { }
+    [Serializable] public class SceneChangeEvent : UnityEvent<string, SceneOperation> { }
 
     public interface INetworkSceneManager
     {
         /// <summary>
         /// Event fires when the Client starts changing scene.
         /// </summary>
-        ClientSceneChangeEvent ClientChangeScene { get; }
+        SceneChangeEvent ClientChangeScene { get; }
 
         /// <summary>
         /// Event fires after the Client has completed its scene change.
         /// </summary>
-        ClientSceneChangeEvent ClientSceneChanged { get; }
+        SceneChangeEvent ClientSceneChanged { get; }
 
         /// <summary>
         /// Event fires before Server changes scene.
         /// </summary>
-        ClientSceneChangeEvent ServerChangeScene { get; }
+        SceneChangeEvent ServerChangeScene { get; }
 
         /// <summary>
         /// Event fires after Server has completed scene change.
         /// </summary>
-        ClientSceneChangeEvent ServerSceneChanged { get; }
+        SceneChangeEvent ServerSceneChanged { get; }
 
         void ChangeServerScene(string scenePath, SceneOperation sceneOperation = SceneOperation.Normal);
     }

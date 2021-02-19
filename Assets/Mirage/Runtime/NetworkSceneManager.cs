@@ -33,29 +33,29 @@ namespace Mirage
         /// Event fires when the Client starts changing scene.
         /// </summary>
         [FormerlySerializedAs("ClientChangeScene")]
-        [SerializeField] ClientSceneChangeEvent _clientChangeScene = new ClientSceneChangeEvent();
-        public ClientSceneChangeEvent ClientChangeScene => _clientChangeScene;
+        [SerializeField] SceneChangeEvent _clientChangeScene = new SceneChangeEvent();
+        public SceneChangeEvent ClientChangeScene => _clientChangeScene;
 
         /// <summary>
         /// Event fires after the Client has completed its scene change.
         /// </summary>
         [FormerlySerializedAs("ClientSceneChanged")]
-        [SerializeField] ClientSceneChangeEvent _clientSceneChanged = new ClientSceneChangeEvent();
-        public ClientSceneChangeEvent ClientSceneChanged => _clientSceneChanged;
+        [SerializeField] SceneChangeEvent _clientSceneChanged = new SceneChangeEvent();
+        public SceneChangeEvent ClientSceneChanged => _clientSceneChanged;
 
         /// <summary>
         /// Event fires before Server changes scene.
         /// </summary>
         [FormerlySerializedAs("ServerChangeScene")]
-        [SerializeField] ClientSceneChangeEvent _serverChangeScene = new ClientSceneChangeEvent();
-        public ClientSceneChangeEvent ServerChangeScene => _serverChangeScene;
+        [SerializeField] SceneChangeEvent _serverChangeScene = new SceneChangeEvent();
+        public SceneChangeEvent ServerChangeScene => _serverChangeScene;
 
         /// <summary>
         /// Event fires after Server has completed scene change.
         /// </summary>
         [FormerlySerializedAs("ServerSceneChanged")]
-        [SerializeField] ClientSceneChangeEvent _serverSceneChanged = new ClientSceneChangeEvent();
-        public ClientSceneChangeEvent ServerSceneChanged => _serverSceneChanged;
+        [SerializeField] SceneChangeEvent _serverSceneChanged = new SceneChangeEvent();
+        public SceneChangeEvent ServerSceneChanged => _serverSceneChanged;
 
         /// <summary>
         /// The path of the current network scene.
