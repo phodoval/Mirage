@@ -70,5 +70,82 @@ namespace Mirage
         /// Gets the total amount of sent data
         /// </summary>
         public virtual long SentBytes => 0;
+
+        //     /// <summary>
+        //     /// 
+        //     /// </summary>
+        //     /// <param name="connection"></param>
+        //     /// <param name="data"></param>
+        //     /// <param name="channel"></param>
+        //     /// <returns>If there is a new message</returns>
+        //     public abstract bool ReceiveNext(out IConnection connection, out ArraySegment<byte> data, out int channel);
+    }
+
+    public class TransportUpdater
+    {
+        readonly Dictionary<IConnection, NetworkConnection> connections;
+        readonly Transport transport;
+
+        public TransportUpdater(Dictionary<IConnection, NetworkConnection> connections, Transport transport)
+        {
+            this.connections = connections;
+            this.transport = transport;
+        }
+
+        /// <summary>
+        /// Collections new message from transports and handles them.
+        ///
+        /// <para>
+        /// Order: <br/>
+        ///     1) new connections <br/>
+        ///     2) Received data <br/>
+        ///     3) disconnections <br/>
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        ///     New connections should be handled before Data because new connection could have also send data when connection
+        /// </para>
+        /// <para>
+        ///     Disconnections should be handled after Data because closing connection could have send "good bye" message before disconnecting
+        /// </para>
+        /// </remarks>
+        public void RunUpdate()
+        {
+            Connect();
+            Receive();
+            Disconnect();
+        }
+
+        private void Receive()
+        {
+            //while (transport.ReceiveNext(out IConnection conn, out ArraySegment<byte> data, out int channel))
+            //{
+            //    try
+            //    {
+
+            //        using (PooledNetworkReader reader = NetworkReaderPool.GetReader(data))
+            //        {
+            //            int msgType = MessagePacker.UnpackId(reader);
+            //            connections[conn].InvokeHandler(msgType, reader, channel);
+            //        }
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        // todo handle Exception better
+            //        Debug.LogException(e);
+            //    }
+            //}
+        }
+
+        private void Connect()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Disconnect()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
