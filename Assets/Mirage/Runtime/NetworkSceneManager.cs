@@ -58,13 +58,15 @@ namespace Mirage
         public ClientSceneChangeEvent ServerSceneChanged => _serverSceneChanged;
 
         /// <summary>
-        /// The path of the current network scene.
+        /// The path of the current active scene.
+        /// <para>If using additive scenes this will be the first scene.</para>
+        /// <para>Value from <see cref="SceneManager.GetActiveScene()"/> </para>
         /// </summary>
         /// <remarks>
         /// <para>New clients that connect to a server will automatically load this scene.</para>
         /// <para>This is used to make sure that all scene changes are initialized by Mirage.</para>
         /// </remarks>
-        public string NetworkScenePath => SceneManager.GetActiveScene().path;
+        public string ActiveScenePath => SceneManager.GetActiveScene().path;
 
         internal AsyncOperation asyncOperation;
 
@@ -75,7 +77,7 @@ namespace Mirage
 
         public void Start()
         {
-            if(DontDestroy)
+            if (DontDestroy)
                 DontDestroyOnLoad(gameObject);
 
             if (Client != null)
@@ -124,7 +126,7 @@ namespace Mirage
                 throw new ArgumentNullException(msg.scenePath, "ClientSceneMessage: " + msg.scenePath + " cannot be empty or null");
             }
 
-            if (logger.LogEnabled()) logger.Log("ClientSceneMessage: changing scenes from: " + NetworkScenePath + " to:" + msg.scenePath);
+            if (logger.LogEnabled()) logger.Log("ClientSceneMessage: changing scenes from: " + ActiveScenePath + " to:" + msg.scenePath);
 
             // Let client prepare for scene change
             OnClientChangeScene(msg.scenePath, msg.sceneOperation);
@@ -218,7 +220,7 @@ namespace Mirage
         {
             logger.Log("NetworkSceneManager.OnServerAuthenticated");
 
-            conn.Send(new SceneMessage { scenePath = NetworkScenePath, additiveScenes = additiveSceneList.ToArray() });
+            conn.Send(new SceneMessage { scenePath = ActiveScenePath, additiveScenes = additiveSceneList.ToArray() });
             conn.Send(new SceneReadyMessage());
         }
 
@@ -280,7 +282,7 @@ namespace Mirage
             {
                 case SceneOperation.Normal:
                     //Scene is already active.
-                    if (NetworkScenePath.Equals(scenePath))
+                    if (ActiveScenePath.Equals(scenePath))
                     {
                         FinishLoadScene(scenePath, sceneOperation);
                     }
@@ -331,7 +333,7 @@ namespace Mirage
         void OnAsyncComplete(AsyncOperation asyncOperation)
         {
             //This is only called in a normal scene change
-            FinishLoadScene(NetworkScenePath, SceneOperation.Normal);
+            FinishLoadScene(ActiveScenePath, SceneOperation.Normal);
         }
 
         internal void FinishLoadScene(string scenePath, SceneOperation sceneOperation)
