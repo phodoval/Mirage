@@ -74,6 +74,7 @@ namespace Mirage
         /// Used by the server to track all additive scenes. To notify clients upon connection 
         /// </summary>
         internal List<string> additiveSceneList = new List<string>();
+
         /// <summary>
         /// Used by the client to load the full additive scene list that the server has upon connection
         /// </summary>
@@ -278,6 +279,9 @@ namespace Mirage
         }
 
         #endregion
+
+        #region Scene Operations
+
         UniTask ApplyOperationAsync(string scenePath, SceneOperation sceneOperation = SceneOperation.Normal)
         {
             switch (sceneOperation)
@@ -377,5 +381,7 @@ namespace Mirage
                 OnClientSceneChanged(scenePath, sceneOperation);
             }
         }
+
+        #endregion
     }
 }
