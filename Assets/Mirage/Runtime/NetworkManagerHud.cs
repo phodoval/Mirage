@@ -49,7 +49,7 @@ namespace Mirage
         public void StartServerOnlyButtonHandler()
         {
             labelText = "Server Mode";
-            NetworkManager.Server.ListenAsync().Forget();
+            NetworkManager.Server.ListenAsync<NetworkManager>().Forget();
             OnlineSetActive();
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -40,6 +41,16 @@ namespace Mirage
             return (c1, c2);
         }
 
+        void IConnection.SendAsync(ArraySegment<byte> data, int channel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int ReceiveAsync(byte[] buffer)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Disconnect()
         {
             // disconnect both ends of the pipe
@@ -48,6 +59,29 @@ namespace Mirage
 
             writer.WriteBytesAndSizeSegment(new ArraySegment<byte>(Array.Empty<byte>()));
             MessageCount.Release();
+        }
+
+        public void ListenAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Poll(out MiragePacket[] buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Supported { get; set; }
+        public long ReceivedBytes { get; set; }
+        public long SentBytes { get; set; }
+        public UniTask<IConnection> ConnectAsync(Uri uri)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Uri> ServerUri()
+        {
+            throw new NotImplementedException();
         }
 
         // technically not an IPEndpoint,  will fix later
@@ -78,6 +112,8 @@ namespace Mirage
 
             return 0;
         }
+
+        public IEnumerable<string> Scheme { get; set; }
 
         public UniTask SendAsync(ArraySegment<byte> data, int channel = Channel.Reliable)
         {

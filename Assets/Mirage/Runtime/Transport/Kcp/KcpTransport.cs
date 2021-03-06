@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Mirage.KCP
 {
-    public class KcpTransport : Transport
+    public class KcpTransport : IConnection
     {
         Socket socket;
 
@@ -27,6 +27,15 @@ namespace Mirage.KCP
         internal readonly Dictionary<IPEndPoint, KcpServerConnection> connectedClients = new Dictionary<IPEndPoint, KcpServerConnection>(new IPEndpointComparer());
 
         public override IEnumerable<string> Scheme => new[] { "kcp" };
+        public void SendAsync(ArraySegment<byte> data, int channel = Channel.Reliable)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int ReceiveAsync(byte[] buffer)
+        {
+            throw new NotImplementedException();
+        }
 
         readonly byte[] buffer = new byte[1500];
 
@@ -43,7 +52,7 @@ namespace Mirage.KCP
         /// </summary>
         /// <exception>If we cannot start the transport</exception>
         /// <returns></returns>
-        public override UniTask ListenAsync()
+        public override void ListenAsync<T>()
         {
             try
             {
@@ -54,7 +63,7 @@ namespace Mirage.KCP
                 socket.Bind(new IPEndPoint(IPAddress.IPv6Any, Port));
 
                 // transport started
-                Started?.Invoke();
+                //Started?.Invoke();
 
                 ListenCompletionSource = new UniTaskCompletionSource();
                 return ListenCompletionSource.Task;
@@ -63,6 +72,11 @@ namespace Mirage.KCP
             {
                 return UniTask.FromException(ex);
             }
+        }
+
+        public void Poll(out MiragePacket[] buffer)
+        {
+            throw new NotImplementedException();
         }
 
         EndPoint newClientEP = new IPEndPoint(IPAddress.IPv6Any, 0);
@@ -192,6 +206,11 @@ namespace Mirage.KCP
             ListenCompletionSource?.TrySetResult();
         }
 
+        void IConnection.ListenAsync()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         ///     Retrieves the address of this server.
         ///     Useful for network discovery
@@ -206,6 +225,11 @@ namespace Mirage.KCP
                 Port = Port
             };
             return new[] { builder.Uri };
+        }
+
+        public EndPoint GetEndPointAddress()
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

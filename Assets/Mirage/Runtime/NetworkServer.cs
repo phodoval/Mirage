@@ -36,9 +36,6 @@ namespace Mirage
         /// </summary>
         public bool Listening = true;
 
-        // transport to use to accept connections
-        public Transport Transport;
-
         [Tooltip("Authentication component attached to this object")]
         public NetworkAuthenticator authenticator;
 
@@ -100,6 +97,8 @@ namespace Mirage
         /// </summary>
         public NetworkClient LocalClient { get; private set; }
 
+        private IConnection localTransportConnection;
+
         /// <summary>
         /// True if there is a local client connected to this server (host mode)
         /// </summary>
@@ -146,12 +145,11 @@ namespace Mirage
             // are modified, so it throws
             // System.InvalidOperationException : Collection was modified; enumeration operation may not execute.
             var connectionscopy = new HashSet<INetworkConnection>(connections);
+
             foreach (INetworkConnection conn in connectionscopy)
             {
                 conn.Disconnect();
             }
-            if (Transport != null)
-                Transport.Disconnect();
         }
 
         void Initialize()
@@ -167,11 +165,6 @@ namespace Mirage
 
             //Make sure connections are cleared in case any old connections references exist from previous sessions
             connections.Clear();
-
-            if (Transport is null)
-                Transport = GetComponent<Transport>();
-            if (Transport == null)
-                throw new InvalidOperationException("Transport could not be found for NetworkServer");
 
             if (authenticator != null)
             {
@@ -189,9 +182,8 @@ namespace Mirage
         /// <summary>
         /// Start the server, setting the maximum number of connections.
         /// </summary>
-        /// <param name="maxConns">Maximum number of allowed connections</param>
         /// <returns></returns>
-        public async UniTask ListenAsync()
+        public async UniTask ListenAsync<T>() where T : IConnection
         {
             Initialize();
 
@@ -200,9 +192,10 @@ namespace Mirage
                 // only start server if we want to listen
                 if (Listening)
                 {
-                    Transport.Started.AddListener(TransportStarted);
-                    Transport.Connected.AddListener(TransportConnected);
-                    await Transport.ListenAsync();
+                    //Transport.Started.AddListener(TransportStarted);
+                    //Transport.Connected.AddListener(TransportConnected);
+
+                    ((IConnection) typeof(T)).ListenAsync();
                 }
             }
             catch (Exception ex)
@@ -211,8 +204,9 @@ namespace Mirage
             }
             finally
             {
-                Transport.Connected.RemoveListener(TransportConnected);
-                Transport.Started.RemoveListener(TransportStarted);
+                //Transport.Connected.RemoveListener(TransportConnected);
+                //Transport.Started.RemoveListener(TransportStarted);
+
                 Cleanup();
             }
         }
@@ -235,13 +229,13 @@ namespace Mirage
         /// This starts a network "host" - a server and client in the same application.
         /// <para>The client returned from StartHost() is a special "local" client that communicates to the in-process server using a message queue instead of the real network. But in almost all other cases, it can be treated as a normal client.</para>
         /// </summary>
-        public UniTask StartHost(NetworkClient client)
+        public UniTask StartHost<T>(NetworkClient client) where T : IConnection
         {
             if (!client)
                 throw new InvalidOperationException("NetworkClient not assigned. Unable to StartHost()");
 
             // start listening to network connections
-            UniTask task = ListenAsync();
+            UniTask task = ListenAsync<T>();
 
             Active = true;
 
@@ -262,6 +256,18 @@ namespace Mirage
         public void StopHost()
         {
             Disconnect();
+        }
+
+        /// <summary>
+        ///     Poll for network information from transports.
+        /// </summary>
+        public void FixedUpdate()
+        {
+            if (Active)
+            {
+                //localTransportConnection?.Poll();
+            }
+
         }
 
         /// <summary>

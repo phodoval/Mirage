@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -192,6 +193,17 @@ namespace Mirage.KCP
             }
         }
 
+        public IEnumerable<string> Scheme { get; set; }
+        void IConnection.SendAsync(ArraySegment<byte> data, int channel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int ReceiveAsync(byte[] buffer)
+        {
+            throw new NotImplementedException();
+        }
+
         public UniTask SendAsync(ArraySegment<byte> data, int channel = Channel.Reliable)
         {
             if (channel == Channel.Reliable)
@@ -304,6 +316,29 @@ namespace Mirage.KCP
 
             // EOF is now available
             dataAvailable?.TrySetResult();
+        }
+
+        public void ListenAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Poll(out MiragePacket[] buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Supported { get; set; }
+        public long ReceivedBytes { get; set; }
+        public long SentBytes { get; set; }
+        public UniTask<IConnection> ConnectAsync(Uri uri)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Uri> ServerUri()
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

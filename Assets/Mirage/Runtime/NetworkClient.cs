@@ -32,7 +32,7 @@ namespace Mirage
     {
         static readonly ILogger logger = LogFactory.GetLogger(typeof(NetworkClient));
 
-        public Transport Transport;
+        public IConnection Transport;
 
         [Tooltip("Authentication component attached to this object")]
         public NetworkAuthenticator authenticator;
@@ -134,11 +134,6 @@ namespace Mirage
         public async UniTask ConnectAsync(Uri uri)
         {
             if (logger.LogEnabled()) logger.Log("Client Connect: " + uri);
-
-            if (Transport == null)
-                Transport = GetComponent<Transport>();
-            if (Transport == null)
-                throw new InvalidOperationException("Transport could not be found for NetworkClient");
 
             connectState = ConnectState.Connecting;
 
