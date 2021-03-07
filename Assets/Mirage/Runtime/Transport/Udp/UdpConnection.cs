@@ -24,10 +24,14 @@ namespace Mirage.UDP
         {
             Debug.Log("Binding server");
 
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) {Blocking = false};
-            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+            socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) {Blocking = false};
+            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.ReuseAddress, true);
 
-            remoteEndpoint = new IPEndPoint(IPAddress.Any, Port);
+            const uint IOC_IN = 0x80000000;
+            const uint IOC_VENDOR = 0x18000000;
+            socket.IOControl(unchecked((int)(IOC_IN | IOC_VENDOR | 12)), new[] { Convert.ToByte(false) }, null);
+
+            remoteEndpoint = new IPEndPoint(IPAddress.IPv6Any, Port);
 
             socket.Bind(remoteEndpoint);
         }
