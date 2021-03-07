@@ -104,12 +104,12 @@ namespace Mirage.Tests
         [UnityTest]
         public IEnumerator Listen() => UniTask.ToCoroutine(async () =>
         {
-            transport1.ListenAsync().Returns(UniTask.CompletedTask);
-            transport2.ListenAsync().Returns(UniTask.CompletedTask);
-            await transport.ListenAsync();
+            transport1.CreateServerConnection();//.Returns(UniTask.CompletedTask);
+            transport2.CreateServerConnection();//.Returns(UniTask.CompletedTask);
+            //transport.CreateServerConnection();
 
-            transport1.Received().ListenAsync().Forget();
-            transport2.Received().ListenAsync().Forget();
+            transport1.Received().CreateServerConnection();
+            transport2.Received().CreateClientConnection();
 
         });
 

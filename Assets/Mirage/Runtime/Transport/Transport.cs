@@ -16,6 +16,9 @@ namespace Mirage
 
         public abstract IEnumerable<string> Scheme { get; }
 
+        public abstract IConnection CreateServerConnection();
+        public abstract IConnection CreateClientConnection();
+
         /// <summary>
         /// Event that gets fired when a client is accepted by the transport
         /// </summary>
@@ -25,15 +28,6 @@ namespace Mirage
         /// Raised when the transport starts
         /// </summary>
         public UnityEvent Started = new UnityEvent();
-
-        /// <summary>
-        /// Open up the port and listen for connections
-        /// Use in servers.
-        /// Note the task ends when we stop listening
-        /// </summary>
-        /// <exception>If we cannot start the transport</exception>
-        /// <returns></returns>
-        public abstract UniTask ListenAsync();
 
         /// <summary>
         /// Stop listening to the port

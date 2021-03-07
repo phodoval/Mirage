@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices.ComTypes;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -43,26 +44,24 @@ namespace Mirage.KCP
         /// </summary>
         /// <exception>If we cannot start the transport</exception>
         /// <returns></returns>
-        public override UniTask ListenAsync()
+        public override IConnection CreateServerConnection()
         {
-            try
+            socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp)
             {
-                socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp)
-                {
-                    DualMode = true
-                };
-                socket.Bind(new IPEndPoint(IPAddress.IPv6Any, Port));
+                DualMode = true
+            };
+            socket.Bind(new IPEndPoint(IPAddress.IPv6Any, Port));
 
-                // transport started
-                Started?.Invoke();
+            // transport started
+            //                Started?.Invoke();
 
-                ListenCompletionSource = new UniTaskCompletionSource();
-                return ListenCompletionSource.Task;
-            }
-            catch (Exception ex)
-            {
-                return UniTask.FromException(ex);
-            }
+            //ListenCompletionSource = new UniTaskCompletionSource();
+            //return ListenCompletionSource.Task;
+            return new KcpServerConnection(socket, newClientEP, delayMode, SendWindowSize, ReceiveWindowSize);
+        }
+
+        public override IConnection CreateClientConnection() {
+            return new KcpClientConnection(delayMode, SendWindowSize, ReceiveWindowSize);
         }
 
         EndPoint newClientEP = new IPEndPoint(IPAddress.IPv6Any, 0);

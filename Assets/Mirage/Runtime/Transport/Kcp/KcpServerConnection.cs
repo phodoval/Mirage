@@ -10,10 +10,6 @@ namespace Mirage.KCP
     {
         internal event Action<int> DataSent;
 
-        public KcpServerConnection() {
-            
-        }
-
         public KcpServerConnection(Socket socket, EndPoint remoteEndpoint, KcpDelayMode delayMode, int sendWindowSize, int receiveWindowSize) : base(delayMode, sendWindowSize, receiveWindowSize)
         {
             this.socket = socket;

@@ -43,7 +43,7 @@ namespace Mirage.Tests
 
             transport.Connected.AddListener(connection => serverConnection = (KcpConnection)connection);
 
-            listenTask = transport.ListenAsync();
+            transport.CreateServerConnection();
 
             var uriBuilder = new UriBuilder
             {

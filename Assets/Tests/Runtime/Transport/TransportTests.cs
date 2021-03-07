@@ -46,7 +46,7 @@ namespace Mirage.Tests
             transport.Connected.AddListener((connection) =>
                 serverConnection = connection);
 
-            listenTask = transport.ListenAsync();
+            transport.CreateServerConnection();
             clientConnection = await transport.ConnectAsync(uri);
 
             await UniTask.WaitUntil(() => serverConnection != null);

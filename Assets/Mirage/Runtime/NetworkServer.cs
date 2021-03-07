@@ -182,15 +182,11 @@ namespace Mirage
             }
         }
 
-        public async UniTask ListenAsync() {
-            await ListenAsync<KcpServerConnection>();
-        }
-
         /// <summary>
         /// Start the server, setting the maximum number of connections.
         /// </summary>
         /// <returns></returns>
-        public async UniTask ListenAsync<T>() where T : IConnection, new()
+        public async UniTask ListenAsync()
         {
             Initialize();
 
@@ -202,7 +198,7 @@ namespace Mirage
                     //Transport.Started.AddListener(TransportStarted);
                     //Transport.Connected.AddListener(TransportConnected);
 
-                    serverConnection = new T();
+                    serverConnection = Transport.CreateServerConnection();
                     serverConnection.ListenAsync();
                 }
             }
@@ -233,21 +229,17 @@ namespace Mirage
             ConnectionAcceptedAsync(networkConnectionToClient).Forget();
         }
 
-        public UniTask StartHost(NetworkClient client) {
-            return StartHost<KcpServerConnection>(client);
-        }
-
         /// <summary>
         /// This starts a network "host" - a server and client in the same application.
         /// <para>The client returned from StartHost() is a special "local" client that communicates to the in-process server using a message queue instead of the real network. But in almost all other cases, it can be treated as a normal client.</para>
         /// </summary>
-        public UniTask StartHost<T>(NetworkClient client) where T : IConnection, new()
+        public UniTask StartHost(NetworkClient client)
         {
             if (!client)
                 throw new InvalidOperationException("NetworkClient not assigned. Unable to StartHost()");
 
             // start listening to network connections
-            UniTask task = ListenAsync<T>();
+            UniTask task = ListenAsync();
 
             Active = true;
 

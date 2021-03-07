@@ -52,9 +52,15 @@ namespace Mirage
             }
         }
 
-        public override UniTask ListenAsync()
+        public override IConnection CreateServerConnection()
         {
-            return UniTask.WhenAll(transports.Select(t => t.ListenAsync()));
+            return null;
+            //return UniTask.WhenAll(transports.Select(t => t.ListenAsync()));
+        }
+
+        public override IConnection CreateClientConnection()
+        {
+            return null;
         }
 
         public override IEnumerable<Uri> ServerUri() =>
