@@ -31,7 +31,7 @@ namespace Mirage.Tests.Performance.Runtime
             // load host
             benchmarker = Object.FindObjectOfType<NetworkManager>();
 
-            benchmarker.Server.StartHost<KcpConnection>(benchmarker.Client).Forget();
+            benchmarker.Server.StartHost(benchmarker.Client).Forget();
 
         });
 

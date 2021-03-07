@@ -37,6 +37,8 @@ namespace Mirage
         /// </summary>
         public bool Listening = true;
 
+        public Transport Transport;
+
         [Tooltip("Authentication component attached to this object")]
         public NetworkAuthenticator authenticator;
 
@@ -98,9 +100,7 @@ namespace Mirage
         /// </summary>
         public NetworkClient LocalClient { get; private set; }
 
-        public Transport Transport;
-
-        private IConnection localTransportConnection;
+        private IConnection serverConnection;
 
         /// <summary>
         /// True if there is a local client connected to this server (host mode)
@@ -183,14 +183,14 @@ namespace Mirage
         }
 
         public async UniTask ListenAsync() {
-            await ListenAsync<KcpConnection>();
+            await ListenAsync<KcpServerConnection>();
         }
 
         /// <summary>
         /// Start the server, setting the maximum number of connections.
         /// </summary>
         /// <returns></returns>
-        public async UniTask ListenAsync<T>() where T : IConnection
+        public async UniTask ListenAsync<T>() where T : IConnection, new()
         {
             Initialize();
 
@@ -202,7 +202,8 @@ namespace Mirage
                     //Transport.Started.AddListener(TransportStarted);
                     //Transport.Connected.AddListener(TransportConnected);
 
-                    ((IConnection) typeof(T)).ListenAsync();
+                    serverConnection = new T();
+                    serverConnection.ListenAsync();
                 }
             }
             catch (Exception ex)
@@ -233,14 +234,14 @@ namespace Mirage
         }
 
         public UniTask StartHost(NetworkClient client) {
-            return StartHost<KcpConnection>(client);
+            return StartHost<KcpServerConnection>(client);
         }
 
         /// <summary>
         /// This starts a network "host" - a server and client in the same application.
         /// <para>The client returned from StartHost() is a special "local" client that communicates to the in-process server using a message queue instead of the real network. But in almost all other cases, it can be treated as a normal client.</para>
         /// </summary>
-        public UniTask StartHost<T>(NetworkClient client) where T : IConnection
+        public UniTask StartHost<T>(NetworkClient client) where T : IConnection, new()
         {
             if (!client)
                 throw new InvalidOperationException("NetworkClient not assigned. Unable to StartHost()");

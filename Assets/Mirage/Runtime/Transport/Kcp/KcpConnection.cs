@@ -36,7 +36,7 @@ namespace Mirage.KCP
 
         private static readonly Stopwatch stopWatch = new Stopwatch();
 
-        static KcpConnection()
+        public KcpConnection()
         {
             stopWatch.Start();
         }
