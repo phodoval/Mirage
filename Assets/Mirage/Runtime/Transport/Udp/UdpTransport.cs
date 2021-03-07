@@ -1,4 +1,4 @@
-﻿using System.Net.Sockets;
+using System.Net.Sockets;
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -7,7 +7,7 @@ namespace Mirage.UDP
 {
     public class UdpTransport : Transport
     {
-        public override IEnumerable<string> Scheme => throw new NotImplementedException();
+        public override IEnumerable<string> Scheme => new[] { "udp" };
 
         public override bool Supported => throw new NotImplementedException();
 

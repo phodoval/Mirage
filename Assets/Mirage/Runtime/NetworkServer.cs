@@ -287,9 +287,8 @@ namespace Mirage
                 while(serverConnection.Poll())
                 {
                     var buffer = new byte[1200];
-                    int length;
 
-                    int channel = serverConnection.Receive(buffer, out length, out EndPoint test);
+                    int channel = serverConnection.Receive(buffer, out int length, out EndPoint test);
 
                     if (connectedClients.TryGetValue(test, out NetworkConnection networkConneciton))
                     {
