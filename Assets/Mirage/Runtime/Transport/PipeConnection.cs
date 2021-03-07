@@ -56,7 +56,7 @@ namespace Mirage
             MessageCount.Release();
         }
 
-        public void ListenAsync()
+        public void Bind()
         {
             throw new NotImplementedException();
         }
@@ -82,7 +82,7 @@ namespace Mirage
         // technically not an IPEndpoint,  will fix later
         public EndPoint GetEndPointAddress() => new IPEndPoint(IPAddress.Loopback, 0);
 
-        public int ReceiveAsync(MemoryStream buffer)
+        public int Receive(MemoryStream buffer)
         {
             // wait for a message
             MessageCount.WaitAsync();

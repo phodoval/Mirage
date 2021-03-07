@@ -208,7 +208,7 @@ namespace Mirage.KCP
         /// </summary>
         /// <param name="buffer">buffer where the message will be written</param>
         /// <returns>true if we got a message, false if we got disconnected</returns>
-        public int ReceiveAsync(MemoryStream buffer)
+        public int Receive(MemoryStream buffer)
         {
             WaitForMessages();
 
@@ -307,7 +307,7 @@ namespace Mirage.KCP
             dataAvailable?.TrySetResult();
         }
 
-        public void ListenAsync()
+        public void Bind()
         {
             throw new NotImplementedException();
         }

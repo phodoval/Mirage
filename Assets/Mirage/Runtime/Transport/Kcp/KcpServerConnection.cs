@@ -29,7 +29,7 @@ namespace Mirage.KCP
                 // this first message is the one that contains the Hashcash,
                 // but we don't care,  we already validated it before creating
                 // the connection
-                ReceiveAsync(stream);
+                Receive(stream);
             }
             catch (Exception ex)
             {

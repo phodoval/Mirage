@@ -364,7 +364,7 @@ namespace Mirage
                 while (true)
                 {
 
-                    int channel = connection.ReceiveAsync(buffer);
+                    int channel = connection.Receive(buffer);
 
                     buffer.TryGetBuffer(out ArraySegment<byte> data);
                     TransportReceive(data, channel);

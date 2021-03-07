@@ -90,7 +90,7 @@ namespace Mirage.KCP
             var stream = new MemoryStream();
             try
             {
-                ReceiveAsync(stream);
+                Receive(stream);
             }
             catch (Exception e)
             {

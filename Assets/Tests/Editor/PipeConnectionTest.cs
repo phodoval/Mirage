@@ -32,7 +32,7 @@ namespace Mirage
         private static async Task ExpectData(IConnection c, byte[] expected)
         {
             var memoryStream = new MemoryStream();
-            c.ReceiveAsync(memoryStream);
+            c.Receive(memoryStream);
 
             memoryStream.TryGetBuffer(out ArraySegment<byte> receivedData);
             Assert.That(receivedData, Is.EqualTo(new ArraySegment<byte>(expected)));
@@ -65,7 +65,7 @@ namespace Mirage
             var memoryStream = new MemoryStream();
             try
             {
-                c1.ReceiveAsync(memoryStream);
+                c1.Receive(memoryStream);
                 Assert.Fail("Recive Async should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -75,7 +75,7 @@ namespace Mirage
 
             try
             {
-                c2.ReceiveAsync(memoryStream);
+                c2.Receive(memoryStream);
                 Assert.Fail("Recive Async should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -93,7 +93,7 @@ namespace Mirage
             var memoryStream = new MemoryStream();
             try
             {
-                c1.ReceiveAsync(memoryStream);
+                c1.Receive(memoryStream);
                 Assert.Fail("Recive Async should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -103,7 +103,7 @@ namespace Mirage
 
             try
             {
-                c2.ReceiveAsync(memoryStream);
+                c2.Receive(memoryStream);
                 Assert.Fail("Recive Async should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)

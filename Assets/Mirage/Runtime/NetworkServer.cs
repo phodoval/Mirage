@@ -199,7 +199,7 @@ namespace Mirage
                     //Transport.Connected.AddListener(TransportConnected);
 
                     serverConnection = Transport.CreateServerConnection();
-                    serverConnection.ListenAsync();
+                    serverConnection.Bind();
                 }
             }
             catch (Exception ex)

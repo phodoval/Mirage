@@ -44,7 +44,7 @@ namespace Mirage
         /// <param name="buffer">buffer where the message will be written</param>
         /// <returns>The channel where we got the message</returns>
         /// <remark> throws System.IO.EndOfStreamException if the connetion has been closed</remark>
-        int ReceiveAsync(MemoryStream buffer);
+        int Receive(MemoryStream buffer);
 
         /// <summary>
         /// Disconnect this connection
@@ -58,7 +58,7 @@ namespace Mirage
         /// </summary>
         /// <exception>If we cannot start the transport</exception>
         /// <returns></returns>
-        void ListenAsync();
+        void Bind();
 
         void Poll(out MiragePacket[] buffer);
 

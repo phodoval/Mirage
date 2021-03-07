@@ -76,7 +76,7 @@ namespace Mirage.Tests
 
             var stream = new MemoryStream();
 
-            serverConnection.ReceiveAsync(stream);
+            serverConnection.Receive(stream);
             byte[] received = stream.ToArray();
             Assert.That(received, Is.EqualTo(data));
         });
@@ -115,12 +115,12 @@ namespace Mirage.Tests
 
             var stream = new MemoryStream();
 
-            serverConnection.ReceiveAsync(stream);
+            serverConnection.Receive(stream);
             byte[] received = stream.ToArray();
             Assert.That(received, Is.EqualTo(data));
 
             stream.SetLength(0);
-            serverConnection.ReceiveAsync(stream);
+            serverConnection.Receive(stream);
             byte[] received2 = stream.ToArray();
             Assert.That(received2, Is.EqualTo(data2));
         });
@@ -135,7 +135,7 @@ namespace Mirage.Tests
 
             var stream = new MemoryStream();
 
-            clientConnection.ReceiveAsync(stream);
+            clientConnection.Receive(stream);
             byte[] received = stream.ToArray();
             Assert.That(received, Is.EqualTo(data));
         });
@@ -148,7 +148,7 @@ namespace Mirage.Tests
             var stream = new MemoryStream();
             try
             {
-                clientConnection.ReceiveAsync(stream);
+                clientConnection.Receive(stream);
                 Assert.Fail("ReceiveAsync should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -165,7 +165,7 @@ namespace Mirage.Tests
             var stream = new MemoryStream();
             try
             {
-                serverConnection.ReceiveAsync(stream);
+                serverConnection.Receive(stream);
                 Assert.Fail("ReceiveAsync should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -182,7 +182,7 @@ namespace Mirage.Tests
             var stream = new MemoryStream();
             try
             {
-                clientConnection.ReceiveAsync(stream);
+                clientConnection.Receive(stream);
                 Assert.Fail("ReceiveAsync should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)

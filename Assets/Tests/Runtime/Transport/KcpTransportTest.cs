@@ -94,7 +94,7 @@ namespace Mirage.Tests
             clientConnection.Send(new ArraySegment<byte>(data));
 
             var buffer = new MemoryStream();
-            serverConnection.ReceiveAsync(buffer);
+            serverConnection.Receive(buffer);
 
             Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
         });
@@ -105,7 +105,7 @@ namespace Mirage.Tests
             serverConnection.Send(new ArraySegment<byte>(data));
 
             var buffer = new MemoryStream();
-            clientConnection.ReceiveAsync(buffer);
+            clientConnection.Receive(buffer);
             Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
         });
 
@@ -118,7 +118,7 @@ namespace Mirage.Tests
             clientConnection.Send(new ArraySegment<byte>(data));
 
             var buffer = new MemoryStream();
-            serverConnection.ReceiveAsync(buffer);
+            serverConnection.Receive(buffer);
 
             Assert.That(transport.ReceivedBytes, Is.GreaterThan(received + data.Length), "Client sent data,  we should have received");
 
@@ -133,7 +133,7 @@ namespace Mirage.Tests
             serverConnection.Send(new ArraySegment<byte>(data));
 
             var buffer = new MemoryStream();
-            clientConnection.ReceiveAsync(buffer);
+            clientConnection.Receive(buffer);
 
             Assert.That(transport.SentBytes, Is.GreaterThan(sent + data.Length), "Client sent data,  we should have received");
 
@@ -145,7 +145,7 @@ namespace Mirage.Tests
             serverConnection.Send(new ArraySegment<byte>(data), Channel.Unreliable);
 
             var buffer = new MemoryStream();
-            int channel = clientConnection.ReceiveAsync(buffer);
+            int channel = clientConnection.Receive(buffer);
             Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
             Assert.That(channel, Is.EqualTo(Channel.Unreliable));
         });
@@ -156,7 +156,7 @@ namespace Mirage.Tests
             clientConnection.Send(new ArraySegment<byte>(data), Channel.Unreliable);
 
             var buffer = new MemoryStream();
-            int channel = serverConnection.ReceiveAsync(buffer);
+            int channel = serverConnection.Receive(buffer);
             Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
             Assert.That(channel, Is.EqualTo(Channel.Unreliable));
         });
@@ -170,7 +170,7 @@ namespace Mirage.Tests
             var buffer = new MemoryStream();
             try
             {
-                clientConnection.ReceiveAsync(buffer);
+                clientConnection.Receive(buffer);
                 Assert.Fail("ReceiveAsync should throw EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -187,7 +187,7 @@ namespace Mirage.Tests
             var buffer = new MemoryStream();
             try
             {
-                serverConnection.ReceiveAsync(buffer);
+                serverConnection.Receive(buffer);
                 Assert.Fail("ReceiveAsync should throw EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -202,7 +202,7 @@ namespace Mirage.Tests
             var buffer = new MemoryStream();
             try
             {
-                serverConnection.ReceiveAsync(buffer);
+                serverConnection.Receive(buffer);
                 Assert.Fail("ReceiveAsync should throw EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -218,7 +218,7 @@ namespace Mirage.Tests
             var buffer = new MemoryStream();
             try
             {
-                clientConnection.ReceiveAsync(buffer);
+                clientConnection.Receive(buffer);
                 Assert.Fail("ReceiveAsync should throw EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -253,7 +253,7 @@ namespace Mirage.Tests
             {
                 while (true)
                 {
-                    serverConnection.ReceiveAsync(buffer);
+                    serverConnection.Receive(buffer);
                 }
             }
             catch (EndOfStreamException)
