@@ -60,7 +60,7 @@ namespace Mirage
         /// <returns></returns>
         void Bind();
 
-        void Poll(out MiragePacket[] buffer);
+        void Poll();
 
         /// <summary>
         /// Determines if this transport is supported in the current platform
@@ -84,7 +84,7 @@ namespace Mirage
         /// <param name="uri">address of the server to connect to</param>
         /// <returns>The connection to the server</returns>
         /// <exception>If connection cannot be established</exception>
-        UniTask<IConnection> ConnectAsync(Uri uri);
+        void Connect(Uri uri);
 
         /// <summary>
         /// Retrieves the address of this server.

@@ -269,7 +269,7 @@ namespace Mirage
         {
             if (Active)
             {
-                //localTransportConnection?.Poll();
+                serverConnection.Poll();
             }
 
         }

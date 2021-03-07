@@ -41,11 +41,6 @@ namespace Mirage
             return (c1, c2);
         }
 
-        public void Send(ArraySegment<byte> data, int channel)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Disconnect()
         {
             // disconnect both ends of the pipe
@@ -61,7 +56,7 @@ namespace Mirage
             throw new NotImplementedException();
         }
 
-        public void Poll(out MiragePacket[] buffer)
+        public void Poll()
         {
             throw new NotImplementedException();
         }
@@ -69,7 +64,7 @@ namespace Mirage
         public bool Supported { get; set; }
         public long ReceivedBytes { get; set; }
         public long SentBytes { get; set; }
-        public UniTask<IConnection> ConnectAsync(Uri uri)
+        public void Connect(Uri uri)
         {
             throw new NotImplementedException();
         }
@@ -85,7 +80,7 @@ namespace Mirage
         public int Receive(MemoryStream buffer)
         {
             // wait for a message
-            MessageCount.WaitAsync();
+            MessageCount.Wait();
 
             buffer.SetLength(0);
             reader.buffer = writer.ToArraySegment();
@@ -110,13 +105,12 @@ namespace Mirage
 
         public IEnumerable<string> Scheme { get; set; }
 
-        public UniTask SendAsync(ArraySegment<byte> data, int channel = Channel.Reliable)
+        public void Send(ArraySegment<byte> data, int channel = Channel.Reliable)
         {
             // add some data to the writer in the connected connection
             // and increase the message count
             connected.writer.WriteBytesAndSizeSegment(data);
             connected.MessageCount.Release();
-            return UniTask.CompletedTask;
         }
     }
 }

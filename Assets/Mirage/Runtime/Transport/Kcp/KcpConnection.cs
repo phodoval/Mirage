@@ -312,7 +312,7 @@ namespace Mirage.KCP
             throw new NotImplementedException();
         }
 
-        public void Poll(out MiragePacket[] buffer)
+        public void Poll()
         {
             throw new NotImplementedException();
         }
@@ -320,7 +320,7 @@ namespace Mirage.KCP
         public bool Supported { get; set; }
         public long ReceivedBytes { get; set; }
         public long SentBytes { get; set; }
-        public UniTask<IConnection> ConnectAsync(Uri uri)
+        public void Connect(Uri uri)
         {
             throw new NotImplementedException();
         }
