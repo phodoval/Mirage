@@ -271,7 +271,7 @@ namespace Mirage.KCP
             state = State.Closed;
         }
 
-        public void Bind()
+        public void Bind(EndPoint endPoint)
         {
             throw new NotImplementedException();
         }

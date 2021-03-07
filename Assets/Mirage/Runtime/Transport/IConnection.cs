@@ -57,7 +57,7 @@ namespace Mirage
         /// </summary>
         /// <exception>If we cannot start the transport</exception>
         /// <returns></returns>
-        void Bind();
+        void Bind(EndPoint endpoint);
 
         bool Poll();
 

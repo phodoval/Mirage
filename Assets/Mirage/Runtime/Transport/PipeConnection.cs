@@ -49,7 +49,7 @@ namespace Mirage
 
             //Disconnected?.Invoke();
         }
-        public void Bind()
+        public void Bind(EndPoint endPoint)
         {
             throw new NotImplementedException();
         }

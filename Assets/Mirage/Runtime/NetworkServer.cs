@@ -217,7 +217,7 @@ namespace Mirage
                     //Transport.Connected.AddListener(TransportConnected);
 
                     serverConnection = Transport.CreateServerConnection();
-                    serverConnection.Bind();
+                    serverConnection.Bind(null);
                 }
             }
             catch (Exception ex)
@@ -302,9 +302,11 @@ namespace Mirage
                         //TODO Implement hashcashing at server level.
                         IConnection newConnection = Transport.CreateClientConnection();
 
+                        newConnection.Bind(endPoint);
                         newConnection.GetEndPointAddress = endPoint;
 
                         var networkConnection = TransportConnected(newConnection);
+
 
                         connectedClients.Add(endPoint, networkConnection);
                     }

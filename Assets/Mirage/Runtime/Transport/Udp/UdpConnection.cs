@@ -20,17 +20,7 @@ namespace Mirage.UDP
 
         public long SentBytes => 0;
 
-        public UdpConnection(EndPoint endPoint)
-        {
-            remoteEndpoint = endPoint;
-        }
-
-        public UdpConnection()
-        {
-
-        }
-
-        public void Bind()
+        public void Bind(EndPoint endPoint = null)
         {
             Debug.Log("Binding server");
 
@@ -41,7 +31,7 @@ namespace Mirage.UDP
             const uint IOC_VENDOR = 0x18000000;
             socket.IOControl(unchecked((int)(IOC_IN | IOC_VENDOR | 12)), new[] { Convert.ToByte(false) }, null);
 
-            remoteEndpoint = new IPEndPoint(IPAddress.IPv6Any, Port);
+            remoteEndpoint = endPoint ?? new IPEndPoint(IPAddress.IPv6Any, Port);
 
             socket.Bind(remoteEndpoint);
         }
