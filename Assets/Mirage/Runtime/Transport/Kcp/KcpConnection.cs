@@ -236,7 +236,7 @@ namespace Mirage.KCP
                 unreliable.Send(data.Array, data.Offset, data.Count);
         }
 
-        public int Receive(MemoryStream buffer)
+        public int Receive(byte[] buffer, int length, out EndPoint endPoint)
         {
             throw new NotImplementedException();
         }
@@ -276,7 +276,7 @@ namespace Mirage.KCP
             throw new NotImplementedException();
         }
 
-        public void Poll()
+        public bool Poll()
         {
             throw new NotImplementedException();
         }

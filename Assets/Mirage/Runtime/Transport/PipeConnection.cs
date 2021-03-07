@@ -36,7 +36,7 @@ namespace Mirage
             return (c1, c2);
         }
 
-        public int Receive(MemoryStream buffer)
+        public int Receive(byte[] buffer, int length, out EndPoint endpoint)
         {
             throw new NotImplementedException();
         }
@@ -53,13 +53,13 @@ namespace Mirage
             throw new NotImplementedException();
         }
 
-        public void Poll()
+        public bool Poll()
         {
             Debug.Log("Polling pipeconn");
             var data = writer.ToArraySegment();
 
             if (data.Count == 0)
-                return;
+                return false;
 
             using (PooledNetworkReader reader = NetworkReaderPool.GetReader(data))
             {
@@ -73,6 +73,8 @@ namespace Mirage
             }
 
             writer.SetLength(0);
+
+            return true;
         }
         public bool Supported { get; set; }
         public long ReceivedBytes { get; set; }

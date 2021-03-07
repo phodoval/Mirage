@@ -1,4 +1,3 @@
-using System.Net.NetworkInformation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +12,6 @@ namespace Mirage.UDP
         Socket socket;
         ushort Port = 25565;
         protected EndPoint remoteEndpoint;
-        Queue<byte[]> messages = new Queue<byte[]>();
 
         public IEnumerable<string> Scheme => new string[1] { "udp" };
 
@@ -56,32 +54,25 @@ namespace Mirage.UDP
             throw new NotImplementedException();
         }
 
-        public void Poll()
+        public bool Poll()
         {
             Debug.Log("Polling");
 
-            byte[] buffer = new byte[1200];
-
-            while (socket.Poll(0, SelectMode.SelectRead))
-            {
-                int recv = socket.ReceiveFrom(buffer, SocketFlags.None, ref remoteEndpoint);
-
-                if (recv > 0)
-                {
-                    messages.Enqueue(buffer);
-                }
-            }
+            return socket.Poll(0, SelectMode.SelectRead);
         }
 
-        public int Receive(MemoryStream buffer)
+        public int Receive(byte[] buffer, int length, out EndPoint endPoint)
         {
-            if (messages.Count == 0) return 0;
-            byte[] msg = messages.Dequeue();
+            buffer = new byte[length];
+            int recv = 0;
+            while (socket.Poll(0, SelectMode.SelectRead))
+            {
+                recv += socket.ReceiveFrom(buffer, SocketFlags.None, ref remoteEndpoint);
+            }
 
-            buffer.SetLength(0);
-            buffer.Write(msg, 0, msg.Length);
+            endPoint = remoteEndpoint;
 
-            return msg.Length;
+            return recv;
         }
 
         public void Send(ArraySegment<byte> data, int channel = 0)
