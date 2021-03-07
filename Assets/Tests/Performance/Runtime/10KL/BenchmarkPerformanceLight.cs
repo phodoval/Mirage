@@ -1,5 +1,6 @@
 using System.Collections;
 using Cysharp.Threading.Tasks;
+using Mirage.KCP;
 using NUnit.Framework;
 using Unity.PerformanceTesting;
 using UnityEditor.SceneManagement;
@@ -28,7 +29,7 @@ namespace Mirage.Tests.Performance.Runtime
             // load host
             benchmarker = Object.FindObjectOfType<NetworkManager>();
 
-            benchmarker.Server.StartHost(benchmarker.Client).Forget();
+            benchmarker.Server.StartHost<KcpConnection>(benchmarker.Client).Forget();
 
         });
 

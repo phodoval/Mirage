@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Mirage.KCP;
 using NUnit.Framework;
 using Unity.PerformanceTesting;
 using UnityEditor;
@@ -51,7 +52,7 @@ namespace Mirage.Tests.Performance.Runtime
 
             var started = new UniTaskCompletionSource();
             Server.Started.AddListener(() => started.TrySetResult());
-            Server.ListenAsync().Forget();
+            Server.ListenAsync<KcpConnection>().Forget();
 
             await started.Task;
 

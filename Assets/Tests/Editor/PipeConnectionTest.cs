@@ -23,16 +23,16 @@ namespace Mirage
             (c1, c2) = PipeConnection.CreatePipe();
         }
 
-        private static UniTask SendData(IConnection c, byte[] data)
+        private static void SendData(IConnection c, byte[] data)
         {
-            return c.SendAsync(new ArraySegment<byte>(data));
+            c.Send(new ArraySegment<byte>(data));
         }
 
 
         private static async Task ExpectData(IConnection c, byte[] expected)
         {
             var memoryStream = new MemoryStream();
-            await c.ReceiveAsync(memoryStream);
+            c.ReceiveAsync(memoryStream);
 
             memoryStream.TryGetBuffer(out ArraySegment<byte> receivedData);
             Assert.That(receivedData, Is.EqualTo(new ArraySegment<byte>(expected)));
@@ -41,7 +41,7 @@ namespace Mirage
         [UnityTest]
         public IEnumerator TestSendAndReceive() => RunAsync(async () =>
         {
-            await SendData(c1, new byte[] { 1, 2, 3, 4 });
+            SendData(c1, new byte[] { 1, 2, 3, 4 });
 
             await ExpectData(c2, new byte[] { 1, 2, 3, 4 });
         });
@@ -49,8 +49,8 @@ namespace Mirage
         [UnityTest]
         public IEnumerator TestSendAndReceiveMultiple() => RunAsync(async () =>
         {
-            await SendData(c1, new byte[] { 1, 2, 3, 4 });
-            await SendData(c1, new byte[] { 5, 6, 7, 8 });
+            SendData(c1, new byte[] { 1, 2, 3, 4 });
+            SendData(c1, new byte[] { 5, 6, 7, 8 });
 
             await ExpectData(c2, new byte[] { 1, 2, 3, 4 });
             await ExpectData(c2, new byte[] { 5, 6, 7, 8 });
@@ -65,7 +65,7 @@ namespace Mirage
             var memoryStream = new MemoryStream();
             try
             {
-                await c1.ReceiveAsync(memoryStream);
+                c1.ReceiveAsync(memoryStream);
                 Assert.Fail("Recive Async should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -75,7 +75,7 @@ namespace Mirage
 
             try
             {
-                await c2.ReceiveAsync(memoryStream);
+                c2.ReceiveAsync(memoryStream);
                 Assert.Fail("Recive Async should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -93,7 +93,7 @@ namespace Mirage
             var memoryStream = new MemoryStream();
             try
             {
-                await c1.ReceiveAsync(memoryStream);
+                c1.ReceiveAsync(memoryStream);
                 Assert.Fail("Recive Async should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -103,7 +103,7 @@ namespace Mirage
 
             try
             {
-                await c2.ReceiveAsync(memoryStream);
+                c2.ReceiveAsync(memoryStream);
                 Assert.Fail("Recive Async should have thrown EndOfStreamException");
             }
             catch (EndOfStreamException)

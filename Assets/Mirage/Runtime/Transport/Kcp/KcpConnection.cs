@@ -194,24 +194,13 @@ namespace Mirage.KCP
         }
 
         public IEnumerable<string> Scheme { get; set; }
-        void IConnection.SendAsync(ArraySegment<byte> data, int channel)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int ReceiveAsync(byte[] buffer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public UniTask SendAsync(ArraySegment<byte> data, int channel = Channel.Reliable)
+        public void Send(ArraySegment<byte> data, int channel = Channel.Reliable)
         {
             if (channel == Channel.Reliable)
                 kcp.Send(data.Array, data.Offset, data.Count);
             else if (channel == Channel.Unreliable)
                 unreliable.Send(data.Array, data.Offset, data.Count);
 
-            return UniTask.CompletedTask;
         }
 
         /// <summary>
@@ -219,9 +208,9 @@ namespace Mirage.KCP
         /// </summary>
         /// <param name="buffer">buffer where the message will be written</param>
         /// <returns>true if we got a message, false if we got disconnected</returns>
-        public async UniTask<int> ReceiveAsync(MemoryStream buffer)
+        public int ReceiveAsync(MemoryStream buffer)
         {
-            await WaitForMessages();
+            WaitForMessages();
 
             ThrowIfClosed();
 
@@ -295,7 +284,7 @@ namespace Mirage.KCP
             {
                 try
                 {
-                    SendAsync(Goodby).Forget();
+                    Send(Goodby);
                     kcp.Flush();
                 }
                 catch (SocketException)
@@ -356,6 +345,11 @@ namespace Mirage.KCP
         {
             var decoder = new Decoder(data, RESERVED);
             return (int)decoder.Decode32U();
+        }
+
+        void IConnection.Send(ArraySegment<byte> data, int channel)
+        {
+            throw new NotImplementedException();
         }
     }
 }

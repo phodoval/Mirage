@@ -41,12 +41,7 @@ namespace Mirage
             return (c1, c2);
         }
 
-        void IConnection.SendAsync(ArraySegment<byte> data, int channel)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int ReceiveAsync(byte[] buffer)
+        public void Send(ArraySegment<byte> data, int channel)
         {
             throw new NotImplementedException();
         }
@@ -87,10 +82,10 @@ namespace Mirage
         // technically not an IPEndpoint,  will fix later
         public EndPoint GetEndPointAddress() => new IPEndPoint(IPAddress.Loopback, 0);
 
-        public async UniTask<int> ReceiveAsync(MemoryStream buffer)
+        public int ReceiveAsync(MemoryStream buffer)
         {
             // wait for a message
-            await MessageCount.WaitAsync();
+            MessageCount.WaitAsync();
 
             buffer.SetLength(0);
             reader.buffer = writer.ToArraySegment();

@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Mirage.KCP;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -42,14 +43,14 @@ namespace Mirage
         public void StartHostButtonHandler()
         {
             labelText = "Host Mode";
-            NetworkManager.Server.StartHost(NetworkManager.Client).Forget();
+            NetworkManager.Server.StartHost<KcpConnection>(NetworkManager.Client).Forget();
             OnlineSetActive();
         }
 
         public void StartServerOnlyButtonHandler()
         {
             labelText = "Server Mode";
-            NetworkManager.Server.ListenAsync<NetworkManager>().Forget();
+            NetworkManager.Server.ListenAsync<KcpConnection>().Forget();
             OnlineSetActive();
         }
 

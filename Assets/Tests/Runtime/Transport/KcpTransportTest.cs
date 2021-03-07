@@ -91,10 +91,10 @@ namespace Mirage.Tests
         [UnityTest]
         public IEnumerator SendDataFromClient() => UniTask.ToCoroutine(async () =>
         {
-            await clientConnection.SendAsync(new ArraySegment<byte>(data));
+            clientConnection.Send(new ArraySegment<byte>(data));
 
             var buffer = new MemoryStream();
-            await serverConnection.ReceiveAsync(buffer);
+            serverConnection.ReceiveAsync(buffer);
 
             Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
         });
@@ -102,10 +102,10 @@ namespace Mirage.Tests
         [UnityTest]
         public IEnumerator SendDataFromServer() => UniTask.ToCoroutine(async () =>
         {
-            await serverConnection.SendAsync(new ArraySegment<byte>(data));
+            serverConnection.Send(new ArraySegment<byte>(data));
 
             var buffer = new MemoryStream();
-            await clientConnection.ReceiveAsync(buffer);
+            clientConnection.ReceiveAsync(buffer);
             Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
         });
 
@@ -115,10 +115,10 @@ namespace Mirage.Tests
             long received = transport.ReceivedBytes;
             Assert.That(received, Is.GreaterThan(0), "Must have received some bytes to establish the connection");
 
-            await clientConnection.SendAsync(new ArraySegment<byte>(data));
+            clientConnection.Send(new ArraySegment<byte>(data));
 
             var buffer = new MemoryStream();
-            await serverConnection.ReceiveAsync(buffer);
+            serverConnection.ReceiveAsync(buffer);
 
             Assert.That(transport.ReceivedBytes, Is.GreaterThan(received + data.Length), "Client sent data,  we should have received");
 
@@ -130,10 +130,10 @@ namespace Mirage.Tests
             long sent = transport.SentBytes;
             Assert.That(sent, Is.GreaterThan(0), "Must have received some bytes to establish the connection");
 
-            await serverConnection.SendAsync(new ArraySegment<byte>(data));
+            serverConnection.Send(new ArraySegment<byte>(data));
 
             var buffer = new MemoryStream();
-            await clientConnection.ReceiveAsync(buffer);
+            clientConnection.ReceiveAsync(buffer);
 
             Assert.That(transport.SentBytes, Is.GreaterThan(sent + data.Length), "Client sent data,  we should have received");
 
@@ -142,10 +142,10 @@ namespace Mirage.Tests
         [UnityTest]
         public IEnumerator SendUnreliableDataFromServer() => UniTask.ToCoroutine(async () =>
         {
-            await serverConnection.SendAsync(new ArraySegment<byte>(data), Channel.Unreliable);
+            serverConnection.Send(new ArraySegment<byte>(data), Channel.Unreliable);
 
             var buffer = new MemoryStream();
-            int channel = await clientConnection.ReceiveAsync(buffer);
+            int channel = clientConnection.ReceiveAsync(buffer);
             Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
             Assert.That(channel, Is.EqualTo(Channel.Unreliable));
         });
@@ -153,10 +153,10 @@ namespace Mirage.Tests
         [UnityTest]
         public IEnumerator SendUnreliableDataFromClient() => UniTask.ToCoroutine(async () =>
         {
-            await clientConnection.SendAsync(new ArraySegment<byte>(data), Channel.Unreliable);
+            clientConnection.Send(new ArraySegment<byte>(data), Channel.Unreliable);
 
             var buffer = new MemoryStream();
-            int channel = await serverConnection.ReceiveAsync(buffer);
+            int channel = serverConnection.ReceiveAsync(buffer);
             Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
             Assert.That(channel, Is.EqualTo(Channel.Unreliable));
         });
@@ -170,7 +170,7 @@ namespace Mirage.Tests
             var buffer = new MemoryStream();
             try
             {
-                await clientConnection.ReceiveAsync(buffer);
+                clientConnection.ReceiveAsync(buffer);
                 Assert.Fail("ReceiveAsync should throw EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -187,7 +187,7 @@ namespace Mirage.Tests
             var buffer = new MemoryStream();
             try
             {
-                await serverConnection.ReceiveAsync(buffer);
+                serverConnection.ReceiveAsync(buffer);
                 Assert.Fail("ReceiveAsync should throw EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -202,7 +202,7 @@ namespace Mirage.Tests
             var buffer = new MemoryStream();
             try
             {
-                await serverConnection.ReceiveAsync(buffer);
+                serverConnection.ReceiveAsync(buffer);
                 Assert.Fail("ReceiveAsync should throw EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -218,7 +218,7 @@ namespace Mirage.Tests
             var buffer = new MemoryStream();
             try
             {
-                await clientConnection.ReceiveAsync(buffer);
+                clientConnection.ReceiveAsync(buffer);
                 Assert.Fail("ReceiveAsync should throw EndOfStreamException");
             }
             catch (EndOfStreamException)
@@ -253,7 +253,7 @@ namespace Mirage.Tests
             {
                 while (true)
                 {
-                    await serverConnection.ReceiveAsync(buffer);
+                    serverConnection.ReceiveAsync(buffer);
                 }
             }
             catch (EndOfStreamException)

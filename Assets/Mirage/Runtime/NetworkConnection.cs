@@ -231,9 +231,9 @@ namespace Mirage
 
         // internal because no one except Mirage should send bytes directly to
         // the client. they would be detected as a message. send messages instead.
-        public UniTask SendAsync(ArraySegment<byte> segment, int channelId = Channel.Reliable)
+        public void Send(ArraySegment<byte> segment, int channelId = Channel.Reliable)
         {
-            return connection.SendAsync(segment, channelId);
+            connection.Send(segment, channelId);
         }
 
 
@@ -364,7 +364,7 @@ namespace Mirage
                 while (true)
                 {
 
-                    int channel = await connection.ReceiveAsync(buffer);
+                    int channel = connection.ReceiveAsync(buffer);
 
                     buffer.TryGetBuffer(out ArraySegment<byte> data);
                     TransportReceive(data, channel);
@@ -495,6 +495,11 @@ namespace Mirage
                     NotifyDelivered?.Invoke(this, envelope.Token);
                 }
             }
+        }
+
+        public UniTask SendAsync(ArraySegment<byte> segment, int channelId = 0)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

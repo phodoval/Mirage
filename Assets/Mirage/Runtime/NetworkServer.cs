@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Mirage.KCP;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
@@ -97,6 +98,8 @@ namespace Mirage
         /// </summary>
         public NetworkClient LocalClient { get; private set; }
 
+        public Transport Transport;
+
         private IConnection localTransportConnection;
 
         /// <summary>
@@ -179,6 +182,10 @@ namespace Mirage
             }
         }
 
+        public async UniTask ListenAsync() {
+            await ListenAsync<KcpConnection>();
+        }
+
         /// <summary>
         /// Start the server, setting the maximum number of connections.
         /// </summary>
@@ -223,6 +230,10 @@ namespace Mirage
         {
             INetworkConnection networkConnectionToClient = GetNewConnection(connection);
             ConnectionAcceptedAsync(networkConnectionToClient).Forget();
+        }
+
+        public UniTask StartHost(NetworkClient client) {
+            return StartHost<KcpConnection>(client);
         }
 
         /// <summary>

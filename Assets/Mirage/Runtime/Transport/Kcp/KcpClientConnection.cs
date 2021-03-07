@@ -85,12 +85,12 @@ namespace Mirage.KCP
 
             var data = new ArraySegment<byte>(hello, 0, length);
             // send a greeting and see if the server replies
-            await SendAsync(data);
+            Send(data);
 
             var stream = new MemoryStream();
             try
             {
-                await ReceiveAsync(stream);
+                ReceiveAsync(stream);
             }
             catch (Exception e)
             {

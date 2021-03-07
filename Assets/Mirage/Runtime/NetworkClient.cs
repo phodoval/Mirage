@@ -32,7 +32,7 @@ namespace Mirage
     {
         static readonly ILogger logger = LogFactory.GetLogger(typeof(NetworkClient));
 
-        public IConnection Transport;
+        public Transport Transport;
 
         [Tooltip("Authentication component attached to this object")]
         public NetworkAuthenticator authenticator;

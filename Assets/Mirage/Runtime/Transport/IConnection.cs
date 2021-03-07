@@ -1,3 +1,4 @@
+using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -35,7 +36,7 @@ namespace Mirage
     {
         IEnumerable<string> Scheme { get; }
 
-        void SendAsync(ArraySegment<byte> data, int channel = Channel.Reliable);
+        void Send(ArraySegment<byte> data, int channel = Channel.Reliable);
 
         /// <summary>
         /// reads a message from connection
@@ -43,7 +44,7 @@ namespace Mirage
         /// <param name="buffer">buffer where the message will be written</param>
         /// <returns>The channel where we got the message</returns>
         /// <remark> throws System.IO.EndOfStreamException if the connetion has been closed</remark>
-        int ReceiveAsync(byte[] buffer);
+        int ReceiveAsync(MemoryStream buffer);
 
         /// <summary>
         /// Disconnect this connection

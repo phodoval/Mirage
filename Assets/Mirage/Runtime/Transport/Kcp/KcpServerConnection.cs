@@ -20,7 +20,7 @@ namespace Mirage.KCP
         internal async UniTask HandshakeAsync()
         {
             // send a greeting and see if the server replies
-            await SendAsync(Hello);
+            Send(Hello);
             var stream = new MemoryStream();
 
             try
@@ -29,7 +29,7 @@ namespace Mirage.KCP
                 // this first message is the one that contains the Hashcash,
                 // but we don't care,  we already validated it before creating
                 // the connection
-                await ReceiveAsync(stream);
+                ReceiveAsync(stream);
             }
             catch (Exception ex)
             {
