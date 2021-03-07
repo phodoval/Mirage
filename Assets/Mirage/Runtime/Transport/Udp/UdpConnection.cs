@@ -1,3 +1,4 @@
+using System.Net.NetworkInformation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +25,7 @@ namespace Mirage.UDP
 
         public void Bind()
         {
+            Debug.Log("Binding server");
             socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
             socket.Bind(new IPEndPoint(IPAddress.IPv6Any, 25565));
         }
@@ -38,13 +40,15 @@ namespace Mirage.UDP
             remoteEndpoint = new IPEndPoint(ipAddress[0], port);
             socket = new Socket(remoteEndpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             socket.Connect(remoteEndpoint);
-
+            Debug.Log("Client connect");
             return this;
         }
 
         public void Disconnect()
         {
-            throw new NotImplementedException();
+            Debug.Log("Disconnect");
+            socket.Close();
+            socket = null;
         }
 
         public EndPoint GetEndPointAddress()
@@ -55,12 +59,17 @@ namespace Mirage.UDP
         public void Poll()
         {
             Debug.Log("Polling");
-            return;
-            byte[] buffer = new byte[1200];
-            int recv = socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
 
-            if (recv > 0) {
-                messages.Enqueue(buffer);
+            byte[] buffer = new byte[1200];
+
+            while (socket.Poll(0, SelectMode.SelectRead))
+            {
+                int recv = socket.ReceiveFrom(buffer, SocketFlags.None, ref remoteEndpoint);
+
+                if (recv > 0)
+                {
+                    messages.Enqueue(buffer);
+                }
             }
         }
 

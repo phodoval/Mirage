@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Net.Sockets;
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
@@ -27,7 +28,7 @@ namespace Mirage.UDP
 
         public override void Disconnect()
         {
-            throw new NotImplementedException();
+            //
         }
 
         public override IEnumerable<Uri> ServerUri()

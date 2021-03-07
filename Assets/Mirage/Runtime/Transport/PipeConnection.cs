@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using UnityEngine;
 
 namespace Mirage
 {
@@ -54,6 +55,7 @@ namespace Mirage
 
         public void Poll()
         {
+            Debug.Log("Polling pipeconn");
             var data = writer.ToArraySegment();
 
             if (data.Count == 0)

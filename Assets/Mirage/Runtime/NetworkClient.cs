@@ -32,7 +32,7 @@ namespace Mirage
     {
         static readonly ILogger logger = LogFactory.GetLogger(typeof(NetworkClient));
 
-        public IConnection Transport;
+        public Transport Transport;
 
         [Tooltip("Authentication component attached to this object")]
         public NetworkAuthenticator authenticator;
@@ -101,6 +101,8 @@ namespace Mirage
         /// </summary>
         public bool IsLocalClient {get; private set; }
 
+        IConnection clientConnection;
+
         /// <summary>
         /// Connect client to a NetworkServer instance.
         /// </summary>
@@ -149,12 +151,13 @@ namespace Mirage
 
             try
             {
-                IConnection transportConnection = Transport.Connect(uri);
+                clientConnection = Transport.CreateClientConnection();
+                clientConnection.Connect(uri);
 
                 InitializeAuthEvents();
 
                 // setup all the handlers
-                Connection = GetNewConnection(transportConnection);
+                Connection = GetNewConnection(clientConnection);
                 Time.Reset();
 
                 RegisterMessageHandlers();
@@ -264,7 +267,9 @@ namespace Mirage
                 Time.UpdateClient(this);
 
                 // dispatch all received messages
-                Transport.Poll();
+                localTransportConnection?.Poll();
+                clientConnection.Poll();
+
             }
 
             if (IsLocalClient && connectState == ConnectState.Connected)

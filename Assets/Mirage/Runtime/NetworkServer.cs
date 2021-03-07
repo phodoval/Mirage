@@ -157,8 +157,8 @@ namespace Mirage
             {
                 conn.Disconnect();
             }
-            if (Transport != null)
-                Transport.Disconnect();
+            if (serverConnection != null)
+                serverConnection.Disconnect();
         }
 
         void Initialize()
