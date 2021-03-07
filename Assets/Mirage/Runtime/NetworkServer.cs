@@ -240,10 +240,12 @@ namespace Mirage
             Started?.Invoke();
         }
 
-        private void TransportConnected(IConnection connection)
+        private NetworkConnection TransportConnected(IConnection connection)
         {
-            INetworkConnection networkConnectionToClient = GetNewConnection(connection);
+            NetworkConnection networkConnectionToClient = GetNewConnection(connection);
             ConnectionAccepted(networkConnectionToClient);
+
+            return networkConnectionToClient;
         }
 
         /// <summary>
@@ -302,9 +304,7 @@ namespace Mirage
 
                         newConnection.GetEndPointAddress = endPoint;
 
-                        var networkConnection = new NetworkConnection(newConnection);
-
-                        TransportConnected(newConnection);
+                        var networkConnection = TransportConnected(newConnection);
 
                         connectedClients.Add(endPoint, networkConnection);
                     }
@@ -337,7 +337,7 @@ namespace Mirage
         /// <summary>
         /// Creates a new INetworkConnection based on the provided IConnection.
         /// </summary>
-        public virtual INetworkConnection GetNewConnection(IConnection connection)
+        public virtual NetworkConnection GetNewConnection(IConnection connection)
         {
             return new NetworkConnection(connection);
         }
