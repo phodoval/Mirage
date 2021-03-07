@@ -33,7 +33,7 @@ namespace Mirage
 
     public interface IConnection
     {
-        public abstract IEnumerable<string> Scheme { get; }
+        IEnumerable<string> Scheme { get; }
 
         void SendAsync(ArraySegment<byte> data, int channel = Channel.Reliable);
 
@@ -57,25 +57,25 @@ namespace Mirage
         /// </summary>
         /// <exception>If we cannot start the transport</exception>
         /// <returns></returns>
-        public abstract void ListenAsync();
+        void ListenAsync();
 
-        public void Poll(out MiragePacket[] buffer);
+        void Poll(out MiragePacket[] buffer);
 
         /// <summary>
         /// Determines if this transport is supported in the current platform
         /// </summary>
         /// <returns>true if the transport works in this platform</returns>
-        public bool Supported { get; }
+        bool Supported { get; }
 
         /// <summary>
         /// Gets the total amount of received data
         /// </summary>
-        public long ReceivedBytes { get; }
+        long ReceivedBytes { get; }
 
         /// <summary>
         /// Gets the total amount of sent data
         /// </summary>
-        public long SentBytes { get; }
+        long SentBytes { get; }
 
         /// <summary>
         /// Connect to a server located at a provided uri
@@ -83,14 +83,14 @@ namespace Mirage
         /// <param name="uri">address of the server to connect to</param>
         /// <returns>The connection to the server</returns>
         /// <exception>If connection cannot be established</exception>
-        public abstract UniTask<IConnection> ConnectAsync(Uri uri);
+        UniTask<IConnection> ConnectAsync(Uri uri);
 
         /// <summary>
         /// Retrieves the address of this server.
         /// Useful for network discovery
         /// </summary>
         /// <returns>the url at which this server can be reached</returns>
-        public abstract IEnumerable<Uri> ServerUri();
+        IEnumerable<Uri> ServerUri();
 
         /// <summary>
         /// the address of endpoint we are connected to
