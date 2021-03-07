@@ -52,7 +52,7 @@ namespace Mirage.Tests.Performance.Runtime
 
             var started = new UniTaskCompletionSource();
             Server.Started.AddListener(() => started.TrySetResult());
-            Server.ListenAsync<KcpConnection>().Forget();
+            Server.ListenAsync().Forget();
 
             await started.Task;
 

@@ -43,14 +43,14 @@ namespace Mirage
         public void StartHostButtonHandler()
         {
             labelText = "Host Mode";
-            NetworkManager.Server.StartHost<KcpConnection>(NetworkManager.Client).Forget();
+            NetworkManager.Server.StartHost(NetworkManager.Client).Forget();
             OnlineSetActive();
         }
 
         public void StartServerOnlyButtonHandler()
         {
             labelText = "Server Mode";
-            NetworkManager.Server.ListenAsync<KcpConnection>().Forget();
+            NetworkManager.Server.ListenAsync().Forget();
             OnlineSetActive();
         }
 

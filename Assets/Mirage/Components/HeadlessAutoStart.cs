@@ -25,7 +25,7 @@ namespace Mirage
             // some transports might not be ready until Start.
             if (Server && SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null && startOnHeadless)
             {
-                Server.ListenAsync<KcpConnection>().Forget();
+                Server.ListenAsync().Forget();
             }
         }
     }
