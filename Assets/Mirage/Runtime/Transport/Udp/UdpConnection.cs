@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
@@ -13,7 +12,7 @@ namespace Mirage.UDP
         ushort Port = 25565;
         protected EndPoint remoteEndpoint;
 
-        public IEnumerable<string> Scheme => new string[1] { "udp" };
+        public IEnumerable<string> Scheme => new[] { "udp" };
 
         public bool Supported => true;
 
@@ -24,20 +23,31 @@ namespace Mirage.UDP
         public void Bind()
         {
             Debug.Log("Binding server");
-            socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
-            socket.Bind(new IPEndPoint(IPAddress.IPv6Any, 25565));
+
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) {Blocking = false};
+            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+
+            remoteEndpoint = new IPEndPoint(IPAddress.Any, Port);
+
+            socket.Bind(remoteEndpoint);
         }
 
         public IConnection Connect(Uri uri)
         {
             ushort port = (ushort)(uri.IsDefaultPort ? Port : uri.Port);
             IPAddress[] ipAddress = Dns.GetHostAddresses(uri.Host);
+
             if (ipAddress.Length < 1)
                 throw new SocketException((int)SocketError.HostNotFound);
 
             remoteEndpoint = new IPEndPoint(ipAddress[0], port);
             socket = new Socket(remoteEndpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             socket.Connect(remoteEndpoint);
+
+            const uint IOC_IN = 0x80000000;
+            const uint IOC_VENDOR = 0x18000000;
+            socket.IOControl(unchecked((int)(IOC_IN | IOC_VENDOR | 12)), new[] { Convert.ToByte(false) }, null);
+
             Debug.Log("Client connect");
             return this;
         }
@@ -63,8 +73,9 @@ namespace Mirage.UDP
 
         public int Receive(byte[] buffer, out int length, out EndPoint endPoint)
         {
-            endPoint = null;
-            length = socket.ReceiveFrom(buffer, SocketFlags.None, ref endPoint);
+            length = socket.ReceiveFrom(buffer, SocketFlags.None, ref remoteEndpoint);
+
+            endPoint = remoteEndpoint;
 
             return Channel.Unreliable;
         }
