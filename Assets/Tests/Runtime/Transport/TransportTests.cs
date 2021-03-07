@@ -137,7 +137,7 @@ namespace Mirage.Tests
         public void EndpointAddress()
         {
             // should give either IPv4 or IPv6 local address
-            var endPoint = (IPEndPoint)serverConnection.GetEndPointAddress();
+            var endPoint = (IPEndPoint)serverConnection.GetEndPointAddress;
             IPAddress ipAddress = endPoint.Address;
             if (ipAddress.IsIPv4MappedToIPv6)
             {

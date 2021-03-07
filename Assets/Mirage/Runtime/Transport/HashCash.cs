@@ -1,8 +1,8 @@
-﻿
+
 using System;
 using System.Security.Cryptography;
 
-namespace Mirage.KCP
+namespace Mirage
 {
 
     /// <summary>

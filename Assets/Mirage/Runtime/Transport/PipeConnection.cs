@@ -15,6 +15,7 @@ namespace Mirage
     {
 
         private PipeConnection connected;
+        private EndPoint _endPoint;
 
         // should only be created by CreatePipe
         private PipeConnection()
@@ -89,7 +90,17 @@ namespace Mirage
             throw new NotImplementedException();
         }
         // technically not an IPEndpoint,  will fix later
-        public EndPoint GetEndPointAddress() => new IPEndPoint(IPAddress.Loopback, 0);
+        public EndPoint GetEndPointAddress
+        {
+            get
+            {
+                return new IPEndPoint(IPAddress.Loopback, 0);
+            }
+            set
+            {
+                _endPoint = value;
+            }
+        }
 
 
         public IEnumerable<string> Scheme { get; set; }

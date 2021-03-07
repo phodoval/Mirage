@@ -98,6 +98,6 @@ namespace Mirage
         /// of EndPoint, which depends on the transport
         /// </summary>
         /// <returns></returns>
-        EndPoint GetEndPointAddress();
+        EndPoint GetEndPointAddress { get; set; }
     }
 }

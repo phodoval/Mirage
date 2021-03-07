@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Events;
@@ -17,6 +18,7 @@ namespace Mirage
         public abstract IEnumerable<string> Scheme { get; }
 
         public abstract IConnection CreateServerConnection();
+
         public abstract IConnection CreateClientConnection();
 
         /// <summary>

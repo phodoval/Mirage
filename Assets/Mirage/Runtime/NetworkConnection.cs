@@ -62,7 +62,7 @@ namespace Mirage
         /// The IP address / URL / FQDN associated with the connection.
         /// Can be useful for a game master to do IP Bans etc.
         /// </summary>
-        public virtual EndPoint Address => connection.GetEndPointAddress();
+        public virtual EndPoint Address => connection.GetEndPointAddress;
 
         /// <summary>
         /// The NetworkIdentity for this connection.

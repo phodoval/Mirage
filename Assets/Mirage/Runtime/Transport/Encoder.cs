@@ -1,4 +1,4 @@
-namespace Mirage.KCP
+namespace Mirage
 {
 
     // encode data into a byte[]

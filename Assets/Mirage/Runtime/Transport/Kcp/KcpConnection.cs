@@ -25,7 +25,7 @@ namespace Mirage.KCP
         const int MinimumKcpTickInterval = 10;
 
         private readonly Socket socket;
-        private readonly EndPoint remoteEndpoint;
+        private EndPoint remoteEndpoint;
         private readonly Kcp kcp;
         private readonly Unreliable unreliable;
 
@@ -300,9 +300,10 @@ namespace Mirage.KCP
         ///     of EndPoint, which depends on the transport
         /// </summary>
         /// <returns></returns>
-        public EndPoint GetEndPointAddress()
+        public EndPoint GetEndPointAddress
         {
-            return remoteEndpoint;
+            get { return remoteEndpoint; }
+            set { remoteEndpoint = value; }
         }
 
         public static int GetChannel(byte[] data)

@@ -88,13 +88,13 @@ namespace Mirage
         [Test]
         public void TestAddressC1()
         {
-            Assert.That(c1.GetEndPointAddress(), Is.EqualTo(new IPEndPoint(IPAddress.Loopback, 0)));
+            Assert.That(c1.GetEndPointAddress, Is.EqualTo(new IPEndPoint(IPAddress.Loopback, 0)));
         }
 
         [Test]
         public void TestAddressC2()
         {
-            Assert.That(c2.GetEndPointAddress(), Is.EqualTo(new IPEndPoint(IPAddress.Loopback, 0)));
+            Assert.That(c2.GetEndPointAddress, Is.EqualTo(new IPEndPoint(IPAddress.Loopback, 0)));
         }
 
     }

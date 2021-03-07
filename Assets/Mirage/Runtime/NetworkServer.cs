@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using Cysharp.Threading.Tasks;
+using Mirage.UDP;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
@@ -288,15 +289,24 @@ namespace Mirage
                 {
                     var buffer = new byte[1200];
 
-                    int channel = serverConnection.Receive(buffer, out int length, out EndPoint test);
+                    int channel = serverConnection.Receive(buffer, out int length, out EndPoint endPoint);
 
-                    if (connectedClients.TryGetValue(test, out NetworkConnection networkConneciton))
+                    if (connectedClients.TryGetValue(endPoint, out NetworkConnection networkConneciton))
                     {
                         networkConneciton.TransportReceive(new ArraySegment<byte>(buffer), channel);
                     }
                     else
                     {
-                        Debug.Log("New Connection. Let's Handshake It.");
+                        //TODO Implement hashcashing at server level.
+                        IConnection newConnection = Transport.CreateClientConnection();
+
+                        newConnection.GetEndPointAddress = endPoint;
+
+                        var networkConnection = new NetworkConnection(newConnection);
+
+                        TransportConnected(newConnection);
+
+                        connectedClients.Add(endPoint, networkConnection);
                     }
                 }
             }

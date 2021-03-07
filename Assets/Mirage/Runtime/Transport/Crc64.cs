@@ -1,4 +1,4 @@
-﻿/* Redis uses the CRC64 variant with "Jones" coefficients and init value of 0.
+/* Redis uses the CRC64 variant with "Jones" coefficients and init value of 0.
  *
  * Specification of this CRC64 variant follows:
  * Name: crc-64-jones
@@ -39,7 +39,7 @@
 
 // Ported to C# By Fredrik Holmström
 
-namespace Mirage.KCP
+namespace Mirage
 {
     static class Crc64
     {

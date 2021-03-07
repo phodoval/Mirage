@@ -20,6 +20,16 @@ namespace Mirage.UDP
 
         public long SentBytes => 0;
 
+        public UdpConnection(EndPoint endPoint)
+        {
+            remoteEndpoint = endPoint;
+        }
+
+        public UdpConnection()
+        {
+
+        }
+
         public void Bind()
         {
             Debug.Log("Binding server");
@@ -63,9 +73,10 @@ namespace Mirage.UDP
             socket = null;
         }
 
-        public EndPoint GetEndPointAddress()
+        public EndPoint GetEndPointAddress
         {
-            throw new NotImplementedException();
+            get { return remoteEndpoint; }
+            set { remoteEndpoint = value; }
         }
 
         public bool Poll()

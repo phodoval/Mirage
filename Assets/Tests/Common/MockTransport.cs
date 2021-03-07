@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using Cysharp.Threading.Tasks;
 
 namespace Mirage.Tests
