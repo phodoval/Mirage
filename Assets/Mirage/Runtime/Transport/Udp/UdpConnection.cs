@@ -61,18 +61,12 @@ namespace Mirage.UDP
             return socket.Poll(0, SelectMode.SelectRead);
         }
 
-        public int Receive(byte[] buffer, int length, out EndPoint endPoint)
+        public int Receive(byte[] buffer, out int length, out EndPoint endPoint)
         {
-            buffer = new byte[length];
-            int recv = 0;
-            while (socket.Poll(0, SelectMode.SelectRead))
-            {
-                recv += socket.ReceiveFrom(buffer, SocketFlags.None, ref remoteEndpoint);
-            }
+            endPoint = null;
+            length = socket.ReceiveFrom(buffer, SocketFlags.None, ref endPoint);
 
-            endPoint = remoteEndpoint;
-
-            return recv;
+            return Channel.Unreliable;
         }
 
         public void Send(ArraySegment<byte> data, int channel = 0)

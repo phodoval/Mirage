@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
@@ -119,6 +120,11 @@ namespace Mirage
         /// A list of local connections on the server.
         /// </summary>
         public readonly HashSet<INetworkConnection> connections = new HashSet<INetworkConnection>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private readonly Dictionary<EndPoint, NetworkConnection> connectedClients = new Dictionary<EndPoint, NetworkConnection>();
 
         /// <summary>
         /// <para>Checks if the server has been started.</para>
@@ -278,9 +284,23 @@ namespace Mirage
             {
                 localTransportConnection?.Poll();
 
-                serverConnection.Poll();
-            }
+                while(serverConnection.Poll())
+                {
+                    var buffer = new byte[1200];
+                    int length;
 
+                    int channel = serverConnection.Receive(buffer, out length, out EndPoint test);
+
+                    if (connectedClients.TryGetValue(test, out NetworkConnection networkConneciton))
+                    {
+                        networkConneciton.TransportReceive(new ArraySegment<byte>(buffer), channel);
+                    }
+                    else
+                    {
+                        Debug.Log("New Connection. Let's Handshake It.");
+                    }
+                }
+            }
         }
 
         /// <summary>

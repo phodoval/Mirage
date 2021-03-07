@@ -43,7 +43,7 @@ namespace Mirage
         /// <param name="buffer">buffer where the message will be written</param>
         /// <returns>The channel where we got the message</returns>
         /// <remark> throws System.IO.EndOfStreamException if the connetion has been closed</remark>
-        int Receive(byte[] buffer, int length, out EndPoint endPoint);
+        int Receive(byte[] buffer, out int length, out EndPoint endPoint);
 
         /// <summary>
         /// Disconnect this connection

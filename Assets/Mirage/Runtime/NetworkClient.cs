@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
@@ -268,8 +269,14 @@ namespace Mirage
 
                 // dispatch all received messages
                 localTransportConnection?.Poll();
-                clientConnection.Poll();
 
+                while (clientConnection.Poll())
+                {
+                    var buffer = new byte[1200];
+                    int length;
+
+                    clientConnection.Receive(buffer, out length, out EndPoint test);
+                }
             }
 
             if (IsLocalClient && connectState == ConnectState.Connected)

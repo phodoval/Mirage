@@ -236,7 +236,7 @@ namespace Mirage.KCP
                 unreliable.Send(data.Array, data.Offset, data.Count);
         }
 
-        public int Receive(byte[] buffer, int length, out EndPoint endPoint)
+        public int Receive(byte[] buffer, out int length, out EndPoint endPoint)
         {
             throw new NotImplementedException();
         }

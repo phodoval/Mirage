@@ -36,7 +36,7 @@ namespace Mirage
             return (c1, c2);
         }
 
-        public int Receive(byte[] buffer, int length, out EndPoint endpoint)
+        public int Receive(byte[] buffer, out int length, out EndPoint endpoint)
         {
             throw new NotImplementedException();
         }
