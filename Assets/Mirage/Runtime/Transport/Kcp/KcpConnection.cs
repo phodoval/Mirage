@@ -4,31 +4,39 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace Mirage.KCP
 {
     public abstract class KcpConnection : IConnection
     {
+
+        enum State
+        {
+            Connecting,
+            Connected,
+            Closed
+        }
+
         static readonly ILogger logger = LogFactory.GetLogger(typeof(KcpConnection));
 
         const int MinimumKcpTickInterval = 10;
 
-        protected Socket socket;
-        protected EndPoint remoteEndpoint;
-        protected Kcp kcp;
-        protected Unreliable unreliable;
-        private readonly int sendWindowSize;
-        private readonly int receiveWindowSize;
+        private readonly Socket socket;
+        private readonly EndPoint remoteEndpoint;
+        private readonly Kcp kcp;
+        private readonly Unreliable unreliable;
 
-        readonly KcpDelayMode delayMode;
-        volatile bool open;
+        private State state = State.Connecting;
 
         public int CHANNEL_SIZE = 4;
+        public event Action Connected;
+        public event Action Disconnected;
 
-        internal event Action Disconnected;
+        internal event Action<int> DataSent;
+
 
         // If we don't receive anything these many milliseconds
         // then consider us disconnected
@@ -53,41 +61,39 @@ namespace Mirage.KCP
 
         protected KcpConnection(KcpDelayMode delayMode, int sendWindowSize, int receiveWindowSize)
         {
-            this.delayMode = delayMode;
-            this.sendWindowSize = sendWindowSize;
-            this.receiveWindowSize = receiveWindowSize;
-        }
+            this.socket = socket;
+            this.remoteEndpoint = remoteEndpoint;
 
-        protected void SetupKcp()
-        {
-            unreliable = new Unreliable(SendWithChecksum)
+            unreliable = new Unreliable(SendPacket)
             {
                 Reserved = RESERVED
             };
 
-            kcp = new Kcp(0, SendWithChecksum)
+            kcp = new Kcp(0, SendPacket)
             {
                 Reserved = RESERVED
             };
 
             kcp.SetNoDelay(delayMode);
             kcp.SetWindowSize((uint)sendWindowSize, (uint)receiveWindowSize);
-            open = true;
 
             Tick().Forget();
         }
 
+        /// <summary>
+        /// Ticks the KCP object.  This is needed for retransmits and congestion control flow messages
+        /// Note no events are raised here
+        /// </summary>
         async UniTaskVoid Tick()
         {
             try
             {
-                Thread.VolatileWrite(ref lastReceived, stopWatch.ElapsedMilliseconds);
+                lastReceived = stopWatch.ElapsedMilliseconds;
 
-                while (open)
+                while (state != State.Closed)
                 {
                     long now = stopWatch.ElapsedMilliseconds;
-                    long received = Thread.VolatileRead(ref lastReceived);
-                    if (now > received + Timeout)
+                    if (now > lastReceived + Timeout)
                         break;
 
                     kcp.Update((uint)now);
@@ -116,56 +122,79 @@ namespace Mirage.KCP
             }
             finally
             {
-                open = false;
-                dataAvailable?.TrySetResult();
-                Close();
+                state = State.Closed;
+                Disconnected?.Invoke();
             }
         }
 
-        protected virtual void Close()
+        readonly MemoryStream receiveBuffer = new MemoryStream(1200);
+
+        private void DispatchKcpMessages()
         {
+            int msgSize = kcp.PeekSize();
+
+            while (msgSize >=0)
+            {
+                receiveBuffer.SetLength(msgSize);
+
+                kcp.Receive(receiveBuffer.GetBuffer());
+
+                // if we receive a disconnect message,  then close everything
+
+                var dataSegment = new ArraySegment<byte>(receiveBuffer.GetBuffer(), 0, msgSize);
+                if (Utils.Equal(dataSegment, Goodby))
+                {
+                    Debug.Log("Received goodby");
+                    state = State.Closed;
+                }
+                else if (state == State.Connecting)
+                {
+                    // the first message is the handshake message.
+                    // simply eat it.
+                    // if this is the server,  the handshake message
+                    // is validated before creating the KCP,  so we can just eat it
+                    // if this is the client, we just expect any message (hello) from the server
+                    state = State.Connected;
+                    msgSize = kcp.PeekSize();
+                    Connected?.Invoke();
+                }
+                else
+                {
+                    //MessageReceived?.Invoke(dataSegment, Channel.Reliable);
+                    msgSize = kcp.PeekSize();
+                }
+            }
         }
 
-        volatile bool isWaiting;
-
-        AutoResetUniTaskCompletionSource dataAvailable;
-
-        internal void RawInput(byte[] buffer, int msgLength)
+        internal void HandlePacket(byte[] buffer, int msgLength)
         {
             // check packet integrity
             if (!Validate(buffer, msgLength))
                 return;
 
+            if (state == State.Closed)
+                return;
+
             int channel = GetChannel(buffer);
             if (channel == Channel.Reliable)
-                InputReliable(buffer, msgLength);
+                HandleReliablePacket(buffer, msgLength);
             else if (channel == Channel.Unreliable)
-                InputUnreliable(buffer, msgLength);
+                HandleUnreliablePacket(buffer, msgLength);
         }
 
-        private void InputUnreliable(byte[] buffer, int msgLength)
+        private void HandleUnreliablePacket(byte[] buffer, int msgLength)
         {
-            unreliable.Input(buffer, msgLength);
-            Thread.VolatileWrite(ref lastReceived, stopWatch.ElapsedMilliseconds);
+            var data = new ArraySegment<byte>(buffer, RESERVED + Unreliable.OVERHEAD, msgLength - RESERVED - Unreliable.OVERHEAD);
 
-            if (isWaiting && unreliable.PeekSize() > 0)
-            {
-                dataAvailable?.TrySetResult();
-            }
+            //MessageReceived?.Invoke(data, Channel.Unreliable);
         }
 
-        private void InputReliable(byte[] buffer, int msgLength)
+        private void HandleReliablePacket(byte[] buffer, int msgLength)
         {
             kcp.Input(buffer, msgLength);
+            DispatchKcpMessages();
 
-            Thread.VolatileWrite(ref lastReceived, stopWatch.ElapsedMilliseconds);
-
-            if (isWaiting && kcp.PeekSize() > 0)
-            {
-                // we just got a full message
-                // Let the receivers know
-                dataAvailable?.TrySetResult();
-            }
+            lastReceived = stopWatch.ElapsedMilliseconds;
         }
 
         private bool Validate(byte[] buffer, int msgLength)
@@ -177,15 +206,19 @@ namespace Mirage.KCP
             return receivedCrc == calculatedCrc;
         }
 
-        protected abstract void RawSend(byte[] data, int length);
+        private void SendBuffer(byte[] data, int length)
+        {
+            DataSent?.Invoke(length);
+            socket.SendTo(data, 0, length, SocketFlags.None, remoteEndpoint);
+        }
 
-        private void SendWithChecksum(byte[] data, int length)
+        private void SendPacket(byte [] data, int length)
         {
             // add a CRC64 checksum in the reserved space
             ulong crc = Crc64.Compute(data, RESERVED, length - RESERVED);
             var encoder = new Encoder(data, 0);
             encoder.Encode64U(crc);
-            RawSend(data, length);
+            SendBuffer(data, length);
 
             if (kcp.WaitSnd > 1000 && logger.WarnEnabled())
             {
@@ -194,84 +227,18 @@ namespace Mirage.KCP
         }
 
         public IEnumerable<string> Scheme { get; set; }
+
         public void Send(ArraySegment<byte> data, int channel = Channel.Reliable)
         {
             if (channel == Channel.Reliable)
                 kcp.Send(data.Array, data.Offset, data.Count);
             else if (channel == Channel.Unreliable)
                 unreliable.Send(data.Array, data.Offset, data.Count);
-
         }
 
-        /// <summary>
-        ///     reads a message from connection
-        /// </summary>
-        /// <param name="buffer">buffer where the message will be written</param>
-        /// <returns>true if we got a message, false if we got disconnected</returns>
         public int Receive(MemoryStream buffer)
         {
-            WaitForMessages();
-
-            ThrowIfClosed();
-
-            if (unreliable.PeekSize() >= 0)
-            {
-                return ReadUnreliable(buffer);
-            }
-            else
-            {
-                return ReadReliable(buffer);
-            }
-        }
-
-        private async UniTask WaitForMessages()
-        {
-            while (kcp.PeekSize() < 0 && unreliable.PeekSize() < 0 && open)
-            {
-                isWaiting = true;
-                dataAvailable = AutoResetUniTaskCompletionSource.Create();
-                await dataAvailable.Task;
-                isWaiting = false;
-            }
-        }
-
-        private void ThrowIfClosed()
-        {
-            if (!open)
-            {
-                Disconnected?.Invoke();
-                throw new EndOfStreamException();
-            }
-        }
-
-        private int ReadUnreliable(MemoryStream buffer)
-        {
-            // we got a message in the unreliable channel
-            int msgSize = unreliable.PeekSize();
-            buffer.SetLength(msgSize);
-            unreliable.Receive(buffer.GetBuffer(), (int)buffer.Length);
-            buffer.Position = msgSize;
-            return Channel.Unreliable;
-        }
-
-        private int ReadReliable(MemoryStream buffer)
-        {
-            int msgSize = kcp.PeekSize();
-            // we have some data,  return it
-            buffer.SetLength(msgSize);
-            kcp.Receive(buffer.GetBuffer());
-            buffer.Position = msgSize;
-
-            // if we receive a disconnect message,  then close everything
-
-            var dataSegment = new ArraySegment<byte>(buffer.GetBuffer(), 0, msgSize);
-            if (Utils.Equal(dataSegment, Goodby))
-            {
-                open = false;
-                Disconnected?.Invoke();
-                throw new EndOfStreamException();
-            }
-            return Channel.Reliable;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -280,7 +247,7 @@ namespace Mirage.KCP
         public virtual void Disconnect()
         {
             // send a disconnect message and disconnect
-            if (open && socket.Connected)
+            if (state == State.Closed && socket != null)
             {
                 try
                 {
@@ -301,10 +268,7 @@ namespace Mirage.KCP
                     // were disconnected
                 }
             }
-            open = false;
-
-            // EOF is now available
-            dataAvailable?.TrySetResult();
+            state = State.Closed;
         }
 
         public void Bind()
@@ -320,7 +284,7 @@ namespace Mirage.KCP
         public bool Supported { get; set; }
         public long ReceivedBytes { get; set; }
         public long SentBytes { get; set; }
-        public void Connect(Uri uri)
+        public IConnection Connect(Uri uri)
         {
             throw new NotImplementedException();
         }
@@ -345,11 +309,6 @@ namespace Mirage.KCP
         {
             var decoder = new Decoder(data, RESERVED);
             return (int)decoder.Decode32U();
-        }
-
-        void IConnection.Send(ArraySegment<byte> data, int channel)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -1,13 +1,15 @@
-using System;
 using System.Collections;
-using System.IO;
-using System.Linq;
-using Cysharp.Threading.Tasks;
-using Mirage.KCP;
 using NUnit.Framework;
-using UnityEngine;
 using UnityEngine.TestTools;
+using Cysharp.Threading.Tasks;
+using System;
+
+using UnityEngine;
 using Random = UnityEngine.Random;
+using System.Linq;
+using Mirage.KCP;
+using System.Collections.Generic;
+using NSubstitute;
 
 namespace Mirage.Tests
 {
@@ -15,8 +17,10 @@ namespace Mirage.Tests
     {
         public ushort port = 7896;
 
-        KcpTransport transport;
+        KcpTransport serverTransport;
         KcpConnection clientConnection;
+
+        KcpTransport clientTransport;
         KcpConnection serverConnection;
 
         Uri testUri;
@@ -24,6 +28,9 @@ namespace Mirage.Tests
         UniTask listenTask;
 
         byte[] data;
+
+        Queue<(byte[] data, int channel)> clientMessages;
+        Queue<(byte[] data, int channel)> serverMessages;
 
         [UnitySetUp]
         public IEnumerator Setup() => UniTask.ToCoroutine(async () =>
@@ -33,17 +40,21 @@ namespace Mirage.Tests
             // without interfering with each other.
             port++;
 
-            var transportGo = new GameObject("kcpTransport", typeof(KcpTransport));
-
-            transport = transportGo.GetComponent<KcpTransport>();
-
-            transport.Port = port;
+            var serverGo = new GameObject("serverTransport", typeof(KcpTransport));
+            serverTransport = serverGo.GetComponent<KcpTransport>();
+            serverTransport.Port = port;
             // speed this up
-            transport.HashCashBits = 3;
+            serverTransport.HashCashBits = 3;
 
-            transport.Connected.AddListener(connection => serverConnection = (KcpConnection)connection);
+            var clientGo = new GameObject("clientTransport", typeof(KcpTransport));
+            clientTransport = clientGo.GetComponent<KcpTransport>();
+            clientTransport.Port = port;
+            // speed this up
+            clientTransport.HashCashBits = 3;
 
-            transport.CreateServerConnection();
+
+            serverTransport.Connected.AddListener(connection => serverConnection = (KcpConnection)connection);
+            //listenTask = serverTransport.ListenAsync();
 
             var uriBuilder = new UriBuilder
             {
@@ -54,17 +65,39 @@ namespace Mirage.Tests
 
             testUri = uriBuilder.Uri;
 
-            clientConnection = (KcpConnection)await transport.ConnectAsync(uriBuilder.Uri);
+            UniTask<IConnection> connectTask = clientTransport.ConnectAsync(uriBuilder.Uri).Timeout(TimeSpan.FromSeconds(2));
 
-            await UniTask.WaitUntil(() => serverConnection != null);
+            // If we don't poll the transports,  they won't open the connection as they don't process
+            // data on their own
+            while (!connectTask.Status.IsCompleted() || serverConnection == null)
+            {
+                serverTransport.Poll();
+                clientTransport.Poll();
+
+                await UniTask.Delay(1);
+            }
+
+            clientConnection = (KcpConnection)await connectTask;
 
             // for our tests,  lower the timeout to just 0.1s
             // so that the tests run quickly.
             serverConnection.Timeout = 500;
             clientConnection.Timeout = 500;
 
+            clientMessages = new Queue<(byte[], int)>();
+            serverMessages = new Queue<(byte[], int)>();
+
+            //clientConnection.MessageReceived += (data, channel) =>
+            //{
+            //    clientMessages.Enqueue((data.ToArray(), channel));
+            //};
+            //serverConnection.MessageReceived += (data, channel) =>
+            //{
+            //    serverMessages.Enqueue((data.ToArray(), channel));
+            //};
+
             data = new byte[Random.Range(10, 255)];
-            for (int i = 0; i < data.Length; i++)
+            for (int i=0; i< data.Length; i++)
                 data[i] = (byte)Random.Range(1, 255);
         });
 
@@ -73,12 +106,24 @@ namespace Mirage.Tests
         {
             clientConnection?.Disconnect();
             serverConnection?.Disconnect();
-            transport.Disconnect();
+            serverTransport.Disconnect();
+            clientTransport.Disconnect();
 
             await listenTask;
-            UnityEngine.Object.Destroy(transport.gameObject);
+            UnityEngine.Object.Destroy(serverTransport.gameObject);
+            UnityEngine.Object.Destroy(clientTransport.gameObject);
             // wait a frame so object will be destroyed
         });
+
+        public async UniTask WaitForMessage()
+        {
+            while (clientMessages.Count == 0 && serverMessages.Count == 0)
+            {
+                serverTransport.Poll();
+                clientTransport.Poll();
+                await UniTask.Delay(10);
+            }
+        }
 
         // A Test behaves as an ordinary method
         [Test]
@@ -89,148 +134,72 @@ namespace Mirage.Tests
         }
 
         [UnityTest]
-        public IEnumerator SendDataFromClient() => UniTask.ToCoroutine(async () =>
-        {
-            clientConnection.Send(new ArraySegment<byte>(data));
-
-            var buffer = new MemoryStream();
-            serverConnection.Receive(buffer);
-
-            Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
-        });
-
-        [UnityTest]
-        public IEnumerator SendDataFromServer() => UniTask.ToCoroutine(async () =>
-        {
-            serverConnection.Send(new ArraySegment<byte>(data));
-
-            var buffer = new MemoryStream();
-            clientConnection.Receive(buffer);
-            Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
-        });
-
-        [UnityTest]
-        public IEnumerator ReceivedBytes() => UniTask.ToCoroutine(async () =>
-        {
-            long received = transport.ReceivedBytes;
+        public IEnumerator ReceivedBytes() => UniTask.ToCoroutine( async () => {
+            long received = serverTransport.ReceivedBytes;
             Assert.That(received, Is.GreaterThan(0), "Must have received some bytes to establish the connection");
 
             clientConnection.Send(new ArraySegment<byte>(data));
 
-            var buffer = new MemoryStream();
-            serverConnection.Receive(buffer);
-
-            Assert.That(transport.ReceivedBytes, Is.GreaterThan(received + data.Length), "Client sent data,  we should have received");
+            await WaitForMessage();
+            Assert.That(serverTransport.ReceivedBytes, Is.GreaterThan(received + data.Length), "Client sent data,  we should have received");
 
         });
 
         [UnityTest]
-        public IEnumerator SentBytes() => UniTask.ToCoroutine(async () =>
-        {
-            long sent = transport.SentBytes;
+        public IEnumerator SentBytes() => UniTask.ToCoroutine( async () => {
+            long sent = serverTransport.SentBytes;
             Assert.That(sent, Is.GreaterThan(0), "Must have received some bytes to establish the connection");
 
             serverConnection.Send(new ArraySegment<byte>(data));
-
-            var buffer = new MemoryStream();
-            clientConnection.Receive(buffer);
-
-            Assert.That(transport.SentBytes, Is.GreaterThan(sent + data.Length), "Client sent data,  we should have received");
+            await WaitForMessage();
+            Assert.That(serverTransport.SentBytes, Is.GreaterThan(sent + data.Length), "Client sent data,  we should have received");
 
         });
 
         [UnityTest]
-        public IEnumerator SendUnreliableDataFromServer() => UniTask.ToCoroutine(async () =>
-        {
+        public IEnumerator SendUnreliableDataFromServer() => UniTask.ToCoroutine( async () => {
             serverConnection.Send(new ArraySegment<byte>(data), Channel.Unreliable);
-
-            var buffer = new MemoryStream();
-            int channel = clientConnection.Receive(buffer);
-            Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
-            Assert.That(channel, Is.EqualTo(Channel.Unreliable));
+            await WaitForMessage();
+            Assert.That(clientMessages.Dequeue().channel, Is.EqualTo(Channel.Unreliable));
         });
 
         [UnityTest]
-        public IEnumerator SendUnreliableDataFromClient() => UniTask.ToCoroutine(async () =>
-        {
+        public IEnumerator SendUnreliableDataFromClient() => UniTask.ToCoroutine( async () => {
             clientConnection.Send(new ArraySegment<byte>(data), Channel.Unreliable);
-
-            var buffer = new MemoryStream();
-            int channel = serverConnection.Receive(buffer);
-            Assert.That(buffer.ToArray(), Is.EquivalentTo(data));
-            Assert.That(channel, Is.EqualTo(Channel.Unreliable));
+            await WaitForMessage();
+            Assert.That(serverMessages.Dequeue().channel, Is.EqualTo(Channel.Unreliable));
         });
 
-
-        [UnityTest]
-        public IEnumerator DisconnectFromServer() => UniTask.ToCoroutine(async () =>
-        {
-            serverConnection.Disconnect();
-
-            var buffer = new MemoryStream();
-            try
-            {
-                clientConnection.Receive(buffer);
-                Assert.Fail("ReceiveAsync should throw EndOfStreamException");
-            }
-            catch (EndOfStreamException)
-            {
-                // good to go
-            }
-        });
-
-        [UnityTest]
-        public IEnumerator DisconnectFromClient() => UniTask.ToCoroutine(async () =>
-        {
-            clientConnection.Disconnect();
-
-            var buffer = new MemoryStream();
-            try
-            {
-                serverConnection.Receive(buffer);
-                Assert.Fail("ReceiveAsync should throw EndOfStreamException");
-            }
-            catch (EndOfStreamException)
-            {
-                // good to go
-            }
-        });
 
         [UnityTest]
         public IEnumerator DisconnectServerFromIdle() => UniTask.ToCoroutine(async () =>
         {
-            var buffer = new MemoryStream();
-            try
-            {
-                serverConnection.Receive(buffer);
-                Assert.Fail("ReceiveAsync should throw EndOfStreamException");
-            }
-            catch (EndOfStreamException)
-            {
-                // good to go
-            }
+            Action disconnectMock = Substitute.For<Action>();
+
+            serverConnection.Disconnected += disconnectMock;
+
+            await UniTask.Delay(1000);
+            serverTransport.Poll();
+            disconnectMock.Received().Invoke();
+
         });
 
         [UnityTest]
         public IEnumerator DisconnectClientFromIdle() => UniTask.ToCoroutine(async () =>
         {
-            // after certain amount of time with no messages, it should disconnect
-            var buffer = new MemoryStream();
-            try
-            {
-                clientConnection.Receive(buffer);
-                Assert.Fail("ReceiveAsync should throw EndOfStreamException");
-            }
-            catch (EndOfStreamException)
-            {
-                // good to go
-            }
+            Action disconnectMock = Substitute.For<Action>();
+
+            clientConnection.Disconnected += disconnectMock;
+
+            await UniTask.Delay(1000);
+            serverTransport.Poll();
+            disconnectMock.Received().Invoke();
         });
 
         [Test]
         public void TestServerUri()
         {
-            Uri serverUri = transport.ServerUri().First();
+            Uri serverUri = serverTransport.ServerUri().First();
 
             Assert.That(serverUri.Port, Is.EqualTo(port));
             Assert.That(serverUri.Scheme, Is.EqualTo(testUri.Scheme));
@@ -239,29 +208,21 @@ namespace Mirage.Tests
         [Test]
         public void IsSupportedTest()
         {
-            Assert.That(transport.Supported, Is.True);
+            Assert.That(serverTransport.Supported, Is.True);
         }
 
         [UnityTest]
         public IEnumerator ConnectionsDontLeak() => UniTask.ToCoroutine(async () =>
-        {
-            serverConnection.Disconnect();
+       {
+           serverConnection.Disconnect();
 
-            var buffer = new MemoryStream();
+           while (serverTransport.connections.Count > 0)
+           {
+               serverTransport.Poll();
+               await UniTask.Delay(10);
+           }
 
-            try
-            {
-                while (true)
-                {
-                    serverConnection.Receive(buffer);
-                }
-            }
-            catch (EndOfStreamException)
-            {
-                // connection is now successfully closed
-            }
-
-            Assert.That(transport.connectedClients, Is.Empty);
-        });
+           Assert.That(serverTransport.connections, Is.Empty);
+       });
     }
 }

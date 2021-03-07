@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using Mirage.KCP;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
@@ -37,6 +36,7 @@ namespace Mirage
         /// </summary>
         public bool Listening = true;
 
+        // transport to use to accept connections
         public Transport Transport;
 
         [Tooltip("Authentication component attached to this object")]
@@ -100,6 +100,8 @@ namespace Mirage
         /// </summary>
         public NetworkClient LocalClient { get; private set; }
 
+        private IConnection localTransportConnection;
+
         private IConnection serverConnection;
 
         /// <summary>
@@ -138,6 +140,9 @@ namespace Mirage
         /// </summary>
         public void Disconnect()
         {
+            if (!Active)
+                return;
+
             if (LocalClient != null)
             {
                 OnStopHost?.Invoke();
@@ -148,11 +153,12 @@ namespace Mirage
             // are modified, so it throws
             // System.InvalidOperationException : Collection was modified; enumeration operation may not execute.
             var connectionscopy = new HashSet<INetworkConnection>(connections);
-
             foreach (INetworkConnection conn in connectionscopy)
             {
                 conn.Disconnect();
             }
+            if (Transport != null)
+                Transport.Disconnect();
         }
 
         void Initialize()
@@ -163,11 +169,15 @@ namespace Mirage
             initialized = true;
 
             Application.quitting += Disconnect;
-            if (logger.LogEnabled()) logger.Log($"NetworkServer Created, Mirage version: {Version.Current}");
-
+            if (logger.LogEnabled()) logger.Log("NetworkServer Created version " + Version.Current);
 
             //Make sure connections are cleared in case any old connections references exist from previous sessions
             connections.Clear();
+
+            if (Transport is null)
+                Transport = GetComponent<Transport>();
+            if (Transport == null)
+                throw new InvalidOperationException("Transport could not be found for NetworkServer");
 
             if (authenticator != null)
             {
@@ -185,6 +195,7 @@ namespace Mirage
         /// <summary>
         /// Start the server, setting the maximum number of connections.
         /// </summary>
+        /// <param name="maxConns">Maximum number of allowed connections</param>
         /// <returns></returns>
         public async UniTask ListenAsync()
         {
@@ -210,7 +221,6 @@ namespace Mirage
             {
                 //Transport.Connected.RemoveListener(TransportConnected);
                 //Transport.Started.RemoveListener(TransportStarted);
-
                 Cleanup();
             }
         }
@@ -226,7 +236,7 @@ namespace Mirage
         private void TransportConnected(IConnection connection)
         {
             INetworkConnection networkConnectionToClient = GetNewConnection(connection);
-            ConnectionAcceptedAsync(networkConnectionToClient).Forget();
+            ConnectionAccepted(networkConnectionToClient);
         }
 
         /// <summary>
@@ -262,13 +272,12 @@ namespace Mirage
             Disconnect();
         }
 
-        /// <summary>
-        ///     Poll for network information from transports.
-        /// </summary>
         public void FixedUpdate()
         {
             if (Active)
             {
+                localTransportConnection?.Poll();
+
                 serverConnection.Poll();
             }
 
@@ -344,9 +353,9 @@ namespace Mirage
             INetworkConnection conn = GetNewConnection(tconn);
             LocalConnection = conn;
             LocalClient = client;
+            localTransportConnection = tconn;
 
-            ConnectionAcceptedAsync(conn).Forget();
-
+            ConnectionAccepted(conn);
         }
 
         /// <summary>
@@ -361,7 +370,7 @@ namespace Mirage
             NetworkConnection.Send(connections, msg, channelId);
         }
 
-        async UniTaskVoid ConnectionAcceptedAsync(INetworkConnection conn)
+        void ConnectionAccepted(INetworkConnection conn)
         {
             if (logger.LogEnabled()) logger.Log("Server accepted client:" + conn);
 
@@ -383,19 +392,10 @@ namespace Mirage
             // let everyone know we just accepted a connection
             Connected?.Invoke(conn);
 
-            // now process messages until the connection closes
-            try
-            {
-                await conn.ProcessMessagesAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogException(ex);
-            }
-            finally
+            conn.Disconnected += () =>
             {
                 OnDisconnected(conn);
-            }
+            };
         }
 
         //called once a client disconnects from the server
@@ -412,6 +412,8 @@ namespace Mirage
 
             if (connection == LocalConnection)
                 LocalConnection = null;
+
+            localTransportConnection = null;
         }
 
         internal void OnAuthenticated(INetworkConnection conn)

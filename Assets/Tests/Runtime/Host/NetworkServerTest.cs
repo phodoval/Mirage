@@ -17,7 +17,7 @@ namespace Mirage.Tests.Host
             NetworkClient secondClient = secondGO.AddComponent<NetworkClient>();
             Transport secondTestTransport = secondGO.AddComponent<LoopbackTransport>();
 
-            secondClient.Transport = secondTestTransport;
+            //secondClient.Transport = secondTestTransport;
 
             secondClient.ConnectAsync("localhost").Forget();
 

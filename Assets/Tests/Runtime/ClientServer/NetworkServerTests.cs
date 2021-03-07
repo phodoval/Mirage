@@ -51,9 +51,6 @@ namespace Mirage.Tests.ClientServer
             connectionToServer.RegisterHandler<WovenTestMessage>(msg => invoked = true);
 
             server.SendToAll(message);
-
-            connectionToServer.ProcessMessagesAsync().Forget();
-
             await AsyncUtil.WaitUntilWithTimeout(() => invoked);
         });
 
@@ -65,8 +62,6 @@ namespace Mirage.Tests.ClientServer
             connectionToServer.RegisterHandler<WovenTestMessage>(msg => invoked = true);
 
             serverIdentity.ConnectionToClient.Send(message);
-
-            connectionToServer.ProcessMessagesAsync().Forget();
 
             await AsyncUtil.WaitUntilWithTimeout(() => invoked);
         });

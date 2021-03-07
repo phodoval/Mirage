@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
@@ -40,6 +40,10 @@ namespace Mirage.Tests
         public override IEnumerable<Uri> ServerUri()
         {
             return new[] { new Uri("kcp://localhost") };
+        }
+
+        public void Poll()
+        {
         }
     }
 }

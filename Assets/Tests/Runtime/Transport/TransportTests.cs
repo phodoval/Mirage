@@ -1,15 +1,16 @@
-using System;
 using System.Collections;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using Cysharp.Threading.Tasks;
-using Mirage.KCP;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using System.Net;
+using System;
 using Object = UnityEngine.Object;
+using System.Linq;
+using Cysharp.Threading.Tasks;
+using Mirage.KCP;
+using NSubstitute;
+using System.Collections.Generic;
+using Random = UnityEngine.Random;
 
 namespace Mirage.Tests
 {
@@ -18,11 +19,17 @@ namespace Mirage.Tests
     {
         #region SetUp
 
-        private T transport;
-        private GameObject transportObj;
+        private T serverTransport;
+        private GameObject serverTransportObj;
+
+        private T clientTransport;
+        private GameObject clientTransportObj;
         private readonly Uri uri;
         private readonly int port;
         private readonly string[] scheme;
+
+        byte[] data1;
+        byte[] data2;
 
         public TransportTests(string[] scheme, string uri, int port)
         {
@@ -34,51 +41,96 @@ namespace Mirage.Tests
         IConnection clientConnection;
         IConnection serverConnection;
 
+
+        Queue<(byte[] data, int channel)> clientMessages;
+        Queue<(byte[] data, int channel)> serverMessages;
+
         UniTask listenTask;
 
         [UnitySetUp]
         public IEnumerator Setup() => UniTask.ToCoroutine(async () =>
         {
-            transportObj = new GameObject();
-
-            transport = transportObj.AddComponent<T>();
-
-            transport.Connected.AddListener((connection) =>
+            serverTransportObj = new GameObject("Server Transport");
+            serverTransport = serverTransportObj.AddComponent<T>();
+            serverTransport.Connected.AddListener((connection) =>
                 serverConnection = connection);
+            //listenTask = serverTransport.ListenAsync();
 
-            transport.CreateServerConnection();
-            clientConnection = await transport.ConnectAsync(uri);
+            clientTransportObj = new GameObject("Client Transport");
+            clientTransport = clientTransportObj.AddComponent<T>();
 
-            await UniTask.WaitUntil(() => serverConnection != null);
+            UniTask<IConnection> connectTask = clientTransport.ConnectAsync(uri).Timeout(TimeSpan.FromSeconds(2));
+
+            while (!connectTask.Status.IsCompleted() || serverConnection == null)
+            {
+                //serverTransport.Poll();
+                //clientTransport.Poll();
+                await UniTask.Delay(10);
+            }
+            clientConnection = await connectTask;
+
+            clientMessages = new Queue<(byte[], int)>();
+            serverMessages = new Queue<(byte[], int)>();
+
+            //clientConnection.MessageReceived += (data, channel) =>
+            //{
+            //    clientMessages.Enqueue((data.ToArray(), channel));
+            //};
+            //serverConnection.MessageReceived += (data, channel) =>
+            //{
+            //    serverMessages.Enqueue((data.ToArray(), channel));
+            //};
+
+            data1 = CreateRandomData();
+            data2 = CreateRandomData();
         });
 
+        private byte[] CreateRandomData()
+        {
+            byte[] data = new byte[Random.Range(10, 255)];
+            for (int i = 0; i < data.Length; i++)
+                data[i] = (byte)Random.Range(1, 255);
+            return data;
+        }
 
         [UnityTearDown]
         public IEnumerator TearDown() => UniTask.ToCoroutine(async () =>
         {
             clientConnection.Disconnect();
             serverConnection.Disconnect();
-            transport.Disconnect();
+            serverTransport.Disconnect();
 
             await listenTask;
-            Object.Destroy(transportObj);
+            Object.Destroy(serverTransportObj);
+            Object.Destroy(clientTransportObj);
         });
+
+        public async UniTask WaitForMessage()
+        {
+            while (clientMessages.Count == 0 && serverMessages.Count == 0)
+            {
+                //serverTransport.Poll();
+                //clientTransport.Poll();
+                await UniTask.Delay(10);
+            }
+        }
 
         #endregion
 
         [UnityTest]
         public IEnumerator ClientToServerTest() => UniTask.ToCoroutine(async () =>
         {
-            Encoding utf8 = Encoding.UTF8;
-            string message = "Hello from the client";
-            byte[] data = utf8.GetBytes(message);
-            clientConnection.Send(new ArraySegment<byte>(data));
+            clientConnection.Send(new ArraySegment<byte>(data1));
+            await WaitForMessage();
+            Assert.That(serverMessages.Dequeue().data, Is.EquivalentTo(data1));
+        });
 
-            var stream = new MemoryStream();
-
-            serverConnection.Receive(stream);
-            byte[] received = stream.ToArray();
-            Assert.That(received, Is.EqualTo(data));
+        [UnityTest]
+        public IEnumerator ServerToClientTest() => UniTask.ToCoroutine(async () =>
+        {
+            serverConnection.Send(new ArraySegment<byte>(data1));
+            await WaitForMessage();
+            Assert.That(clientMessages.Dequeue().data, Is.EquivalentTo(data1));
         });
 
         [Test]
@@ -86,9 +138,7 @@ namespace Mirage.Tests
         {
             // should give either IPv4 or IPv6 local address
             var endPoint = (IPEndPoint)serverConnection.GetEndPointAddress();
-
             IPAddress ipAddress = endPoint.Address;
-
             if (ipAddress.IsIPv4MappedToIPv6)
             {
                 // mono IsLoopback seems buggy,
@@ -96,7 +146,6 @@ namespace Mirage.Tests
                 // so map it back down to IPv4
                 ipAddress = ipAddress.MapToIPv4();
             }
-
             Assert.That(IPAddress.IsLoopback(ipAddress), "Expected loopback address but got {0}", ipAddress);
             // random port
         }
@@ -104,97 +153,57 @@ namespace Mirage.Tests
         [UnityTest]
         public IEnumerator ClientToServerMultipleTest() => UniTask.ToCoroutine(async () =>
         {
-            Encoding utf8 = Encoding.UTF8;
-            string message = "Hello from the client 1";
-            byte[] data = utf8.GetBytes(message);
-            clientConnection.Send(new ArraySegment<byte>(data));
-
-            string message2 = "Hello from the client 2";
-            byte[] data2 = utf8.GetBytes(message2);
+            clientConnection.Send(new ArraySegment<byte>(data1));
             clientConnection.Send(new ArraySegment<byte>(data2));
 
-            var stream = new MemoryStream();
+            await WaitForMessage();
+            Assert.That(serverMessages.Dequeue().data, Is.EquivalentTo(data1));
 
-            serverConnection.Receive(stream);
-            byte[] received = stream.ToArray();
-            Assert.That(received, Is.EqualTo(data));
-
-            stream.SetLength(0);
-            serverConnection.Receive(stream);
-            byte[] received2 = stream.ToArray();
-            Assert.That(received2, Is.EqualTo(data2));
+            await WaitForMessage();
+            Assert.That(serverMessages.Dequeue().data, Is.EquivalentTo(data2));
         });
 
-        [UnityTest]
-        public IEnumerator ServerToClientTest() => UniTask.ToCoroutine(async () =>
+
+        [Test]
+        public void DisconnectServerTest()
         {
-            Encoding utf8 = Encoding.UTF8;
-            string message = "Hello from the server";
-            byte[] data = utf8.GetBytes(message);
-            serverConnection.Send(new ArraySegment<byte>(data));
+            Action disconnectMock = Substitute.For<Action>();
+            //clientConnection.Disconnected += disconnectMock;
 
-            var stream = new MemoryStream();
-
-            clientConnection.Receive(stream);
-            byte[] received = stream.ToArray();
-            Assert.That(received, Is.EqualTo(data));
-        });
-
-        [UnityTest]
-        public IEnumerator DisconnectServerTest() => UniTask.ToCoroutine(async () =>
-        {
             serverConnection.Disconnect();
+            //serverTransport.Poll();
 
-            var stream = new MemoryStream();
-            try
-            {
-                clientConnection.Receive(stream);
-                Assert.Fail("ReceiveAsync should have thrown EndOfStreamException");
-            }
-            catch (EndOfStreamException)
-            {
-                // good to go
-            }
-        });
+            disconnectMock.Received().Invoke();
+        }
 
-        [UnityTest]
-        public IEnumerator DisconnectClientTest() => UniTask.ToCoroutine(async () =>
+        [Test]
+        public void DisconnectClientTest()
         {
+            Action disconnectMock = Substitute.For<Action>();
+            //serverConnection.Disconnected += disconnectMock;
+
             clientConnection.Disconnect();
+            //serverTransport.Poll();
 
-            var stream = new MemoryStream();
-            try
-            {
-                serverConnection.Receive(stream);
-                Assert.Fail("ReceiveAsync should have thrown EndOfStreamException");
-            }
-            catch (EndOfStreamException)
-            {
-                // good to go
-            }
-        });
+            disconnectMock.Received().Invoke();
+        }
 
-        [UnityTest]
-        public IEnumerator DisconnectClientTest2() => UniTask.ToCoroutine(async () =>
+        [Test]
+        public void DisconnectClientTest2()
         {
-            clientConnection.Disconnect();
+            Action disconnectMock = Substitute.For<Action>();
+            //clientConnection.Disconnected += disconnectMock;
 
-            var stream = new MemoryStream();
-            try
-            {
-                clientConnection.Receive(stream);
-                Assert.Fail("ReceiveAsync should have thrown EndOfStreamException");
-            }
-            catch (EndOfStreamException)
-            {
-                // good to go
-            }
-        });
+            clientConnection.Disconnect();
+            //serverTransport.Poll();
+
+            disconnectMock.Received().Invoke();
+        }
 
         [Test]
         public void TestServerUri()
         {
-            Uri serverUri = transport.ServerUri().First();
+            Uri serverUri = serverTransport.ServerUri().First();
 
             Assert.That(serverUri.Port, Is.EqualTo(port));
             Assert.That(serverUri.Host, Is.EqualTo(Dns.GetHostName()).IgnoreCase);
@@ -204,7 +213,7 @@ namespace Mirage.Tests
         [Test]
         public void TestScheme()
         {
-            Assert.That(transport.Scheme, Is.EquivalentTo(scheme));
+            Assert.That(serverTransport.Scheme, Is.EquivalentTo(scheme));
         }
     }
 }

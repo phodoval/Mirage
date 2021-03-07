@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -179,18 +178,6 @@ namespace Mirage
             messageHandlers.Clear();
         }
 
-        /// <summary>
-        /// This sends a network message to the connection.
-        /// </summary>
-        /// <typeparam name="T">The message type</typeparam>
-        /// <param name="msg">The message to send</param>
-        /// <param name="channelId">The transport layer channel to send on.</param>
-        /// <returns></returns>
-        public virtual void Send<T>(T msg, int channelId = Channel.Reliable)
-        {
-            SendAsync(msg, channelId).Forget();
-        }
-
         public static void Send<T>(IEnumerable<INetworkConnection> connections, T msg, int channelId = Channel.Reliable)
         {
             using (PooledNetworkWriter writer = NetworkWriterPool.GetWriter())
@@ -203,7 +190,7 @@ namespace Mirage
                 foreach (INetworkConnection conn in connections)
                 {
                     // send to all connections, but don't wait for them
-                    conn.SendAsync(segment, channelId).Forget();
+                    conn.Send(segment, channelId);
                     count++;
                 }
 
@@ -218,14 +205,14 @@ namespace Mirage
         /// <param name="msg">The message to send.</param>
         /// <param name="channelId">The transport layer channel to send on.</param>
         /// <returns></returns>
-        public virtual UniTask SendAsync<T>(T msg, int channelId = Channel.Reliable)
+        public virtual void Send<T>(T msg, int channelId = Channel.Reliable)
         {
             using (PooledNetworkWriter writer = NetworkWriterPool.GetWriter())
             {
                 // pack message and send allocation free
                 MessagePacker.Pack(msg, writer);
                 NetworkDiagnostics.OnSend(msg, channelId, writer.Length, 1);
-                return SendAsync(writer.ToArraySegment(), channelId);
+                Send(writer.ToArraySegment(), channelId);
             }
         }
 
@@ -355,27 +342,6 @@ namespace Mirage
             clientOwnedObjects.Clear();
         }
 
-        public async UniTask ProcessMessagesAsync()
-        {
-            var buffer = new MemoryStream();
-
-            try
-            {
-                while (true)
-                {
-
-                    int channel = connection.Receive(buffer);
-
-                    buffer.TryGetBuffer(out ArraySegment<byte> data);
-                    TransportReceive(data, channel);
-                }
-            }
-            catch (EndOfStreamException)
-            {
-                // connection closed,  normal
-            }
-        }
-
         #region Notify
 
         internal struct PacketEnvelope
@@ -395,7 +361,7 @@ namespace Mirage
         private ushort receiveSequence;
         private ulong receiveMask;
 
-
+        
 
         /// <summary>
         /// Sends a message, but notify when it is delivered or lost
@@ -410,7 +376,7 @@ namespace Mirage
                 NotifyLost?.Invoke(this, token);
                 return;
             }
-
+            
             using (PooledNetworkWriter writer = NetworkWriterPool.GetWriter())
             {
                 var notifyPacket = new NotifyPacket
@@ -429,7 +395,7 @@ namespace Mirage
                 MessagePacker.Pack(notifyPacket, writer);
                 MessagePacker.Pack(msg, writer);
                 NetworkDiagnostics.OnSend(msg, channelId, writer.Length, 1);
-                SendAsync(writer.ToArraySegment(), channelId).Forget();
+                Send(writer.ToArraySegment(), channelId);
                 lastNotifySentTime = Time.unscaledTime;
             }
 
@@ -497,11 +463,6 @@ namespace Mirage
             }
         }
 
-        public UniTask SendAsync(ArraySegment<byte> segment, int channelId = 0)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Raised when a message is delivered
         /// </summary>
@@ -511,6 +472,7 @@ namespace Mirage
         /// Raised when a message is lost
         /// </summary>
         public event Action<INetworkConnection, object> NotifyLost;
+        public event Action Disconnected;
         #endregion
     }
 }

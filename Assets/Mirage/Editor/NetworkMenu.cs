@@ -17,7 +17,7 @@ namespace Mirage
             NetworkSceneManager nsm = go.GetComponent<NetworkSceneManager>();
 
             NetworkClient networkClient = go.GetComponent<NetworkClient>();
-            networkClient.Transport = transport;
+            networkClient.Transport = transport.CreateClientConnection();
 
             NetworkServer networkServer = go.GetComponent<NetworkServer>();
             networkServer.Transport = transport;

@@ -180,7 +180,7 @@ namespace Mirage.HeadlessBenchmark
             spawner.ClientObjectManager = objectManager;
             spawner.SceneManager = networkSceneManager;
 
-            client.Transport = transport;
+            client.Transport = transport.CreateClientConnection();
 
             try
             {

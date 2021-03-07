@@ -1,8 +1,7 @@
-using System.IO;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
-using Cysharp.Threading.Tasks;
 
 namespace Mirage
 {
@@ -84,7 +83,7 @@ namespace Mirage
         /// <param name="uri">address of the server to connect to</param>
         /// <returns>The connection to the server</returns>
         /// <exception>If connection cannot be established</exception>
-        void Connect(Uri uri);
+        IConnection Connect(Uri uri);
 
         /// <summary>
         /// Retrieves the address of this server.

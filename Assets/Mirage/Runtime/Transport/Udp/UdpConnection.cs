@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Mirage.UDP
@@ -29,7 +28,7 @@ namespace Mirage.UDP
             socket.Bind(new IPEndPoint(IPAddress.IPv6Any, 25565));
         }
 
-        public void Connect(Uri uri)
+        public IConnection Connect(Uri uri)
         {
             ushort port = (ushort)(uri.IsDefaultPort ? Port : uri.Port);
             IPAddress[] ipAddress = Dns.GetHostAddresses(uri.Host);
@@ -39,6 +38,8 @@ namespace Mirage.UDP
             remoteEndpoint = new IPEndPoint(ipAddress[0], port);
             socket = new Socket(remoteEndpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             socket.Connect(remoteEndpoint);
+
+            return this;
         }
 
         public void Disconnect()

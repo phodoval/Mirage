@@ -1,4 +1,5 @@
-using Cysharp.Threading.Tasks;
+using System;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace Mirage
@@ -40,7 +41,5 @@ namespace Mirage
         void Disconnect();
 
         void Send<T>(T message, int channelId = Channel.Reliable);
-
-        UniTask SendAsync<T>(T message, int channelId = Channel.Reliable);
     }
 }

@@ -32,7 +32,7 @@ namespace Mirage
     {
         static readonly ILogger logger = LogFactory.GetLogger(typeof(NetworkClient));
 
-        public Transport Transport;
+        public IConnection Transport;
 
         [Tooltip("Authentication component attached to this object")]
         public NetworkAuthenticator authenticator;
@@ -64,6 +64,16 @@ namespace Mirage
         /// </summary>
         public INetworkConnection Connection { get; internal set; }
 
+        /// <summary>
+        /// connection to the server
+        /// </summary>
+        private IConnection localTransportConnection;
+
+        /// <summary>
+        /// NetworkIdentity of the localPlayer
+        /// </summary>
+        public NetworkIdentity LocalPlayer => Connection?.Identity;
+
         internal ConnectState connectState = ConnectState.Disconnected;
 
         /// <summary>
@@ -89,7 +99,7 @@ namespace Mirage
         /// <summary>
         /// NetworkClient can connect to local server in host mode too
         /// </summary>
-        public bool IsLocalClient { get; private set; }
+        public bool IsLocalClient {get; private set; }
 
         /// <summary>
         /// Connect client to a NetworkServer instance.
@@ -139,7 +149,7 @@ namespace Mirage
 
             try
             {
-                IConnection transportConnection = await Transport.ConnectAsync(uri);
+                IConnection transportConnection = Transport.Connect(uri);
 
                 InitializeAuthEvents();
 
@@ -149,7 +159,7 @@ namespace Mirage
 
                 RegisterMessageHandlers();
                 Time.UpdateClient(this);
-                OnConnected().Forget();
+                OnConnected();
             }
             catch (Exception)
             {
@@ -171,9 +181,11 @@ namespace Mirage
             server.SetLocalConnection(this, c2);
             IsLocalClient = true;
             Connection = GetNewConnection(c1);
+            localTransportConnection = c1;
+
             RegisterHostHandlers();
 
-            OnConnected().Forget();
+            OnConnected();
         }
 
         /// <summary>
@@ -199,30 +211,20 @@ namespace Mirage
             }
         }
 
-        async UniTaskVoid OnConnected()
+        void OnConnected()
         {
             // reset network time stats
 
             // the handler may want to send messages to the client
             // thus we should set the connected state before calling the handler
             connectState = ConnectState.Connected;
-            Connected?.Invoke(Connection);
-
-            // start processing messages
-            try
-            {
-                await Connection.ProcessMessagesAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogException(ex);
-            }
-            finally
+            Connection.Disconnected += () =>
             {
                 Cleanup();
-
                 Disconnected?.Invoke();
-            }
+            };
+
+            Connected?.Invoke(Connection);
         }
 
         internal void OnAuthenticated(INetworkConnection conn)
@@ -248,23 +250,26 @@ namespace Mirage
         /// <param name="message"></param>
         /// <param name="channelId"></param>
         /// <returns>True if message was sent.</returns>
-        public UniTask SendAsync<T>(T message, int channelId = Channel.Reliable)
-        {
-            return Connection.SendAsync(message, channelId);
-        }
-
         public void Send<T>(T message, int channelId = Channel.Reliable)
         {
-            Connection.SendAsync(message, channelId).Forget();
+            Connection.Send(message, channelId);
         }
 
-        internal void Update()
+        internal void FixedUpdate()
         {
             // local connection?
-            if (!IsLocalClient && Active && connectState == ConnectState.Connected)
+            if (!IsLocalClient && Active)
             {
                 // only update things while connected
                 Time.UpdateClient(this);
+
+                // dispatch all received messages
+                Transport.Poll();
+            }
+
+            if (IsLocalClient && connectState == ConnectState.Connected)
+            {
+                localTransportConnection.Poll();
             }
         }
 
