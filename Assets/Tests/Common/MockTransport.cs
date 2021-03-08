@@ -19,10 +19,10 @@ namespace Mirage.Tests
 
         UniTaskCompletionSource completionSource;
 
-        public override void Disconnect()
+        /*public override void Disconnect()
         {
             completionSource.TrySetResult();
-        }
+        }*/
 
         public override IConnection CreateServerConnection()
         {

@@ -112,7 +112,7 @@ namespace Mirage.KCP
             catch (SocketException)
             {
                 //Client disconnected
-                Disconnect();
+                //Disconnect();
             }
         }
 
@@ -218,12 +218,12 @@ namespace Mirage.KCP
         /// <summary>
         ///     Stop listening to the port
         /// </summary>
-        public override void Disconnect()
+        /*public override void Disconnect()
         {
             socket?.Close();
             socket = null;
             ListenCompletionSource?.TrySetResult();
-        }
+        }*/
 
         /// <summary>
         ///     Determines if this transport is supported in the current platform

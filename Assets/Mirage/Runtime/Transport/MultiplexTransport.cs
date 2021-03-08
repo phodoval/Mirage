@@ -38,11 +38,11 @@ namespace Mirage
             throw new ArgumentException($"No transport was able to connect to {uri}");
         }
 
-        public override void Disconnect()
+        /*public override void Disconnect()
         {
             foreach (Transport transport in transports)
                 transport.Disconnect();
-        }
+        }*/
 
         public void Start()
         {

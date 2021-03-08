@@ -98,7 +98,7 @@ namespace Mirage.Tests
         {
             clientConnection.Disconnect();
             serverConnection.Disconnect();
-            serverTransport.Disconnect();
+            //serverTransport.Disconnect();
 
             await listenTask;
             Object.Destroy(serverTransportObj);

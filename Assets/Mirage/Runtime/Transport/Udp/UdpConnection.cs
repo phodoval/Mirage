@@ -20,16 +20,18 @@ namespace Mirage.UDP
 
         public long SentBytes => 0;
 
-        public void Bind(EndPoint endPoint = null)
-        {
-            Debug.Log("Binding server");
-
-            socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) {Blocking = false};
+        public UdpConnection() {
+            socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) { Blocking = false };
             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.ReuseAddress, true);
 
             const uint IOC_IN = 0x80000000;
             const uint IOC_VENDOR = 0x18000000;
             socket.IOControl(unchecked((int)(IOC_IN | IOC_VENDOR | 12)), new[] { Convert.ToByte(false) }, null);
+        }
+
+        public void Bind(EndPoint endPoint = null)
+        {
+            Debug.Log("Binding to endpoint " + endPoint);
 
             remoteEndpoint = endPoint ?? new IPEndPoint(IPAddress.IPv6Any, Port);
 
@@ -45,12 +47,7 @@ namespace Mirage.UDP
                 throw new SocketException((int)SocketError.HostNotFound);
 
             remoteEndpoint = new IPEndPoint(ipAddress[0], port);
-            socket = new Socket(remoteEndpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-            socket.Connect(remoteEndpoint);
-
-            const uint IOC_IN = 0x80000000;
-            const uint IOC_VENDOR = 0x18000000;
-            socket.IOControl(unchecked((int)(IOC_IN | IOC_VENDOR | 12)), new[] { Convert.ToByte(false) }, null);
+            //Bind(remoteEndpoint);
 
             Debug.Log("Client connect");
             return this;
@@ -85,9 +82,9 @@ namespace Mirage.UDP
             return Channel.Unreliable;
         }
 
-        public void Send(ArraySegment<byte> data, int channel = 0)
+        public void Send(ArraySegment<byte> data, int channel = Channel.Reliable)
         {
-            socket.Send(data.Array, data.Count, SocketFlags.None);
+            socket.SendTo(data.Array, data.Count, SocketFlags.None, remoteEndpoint);
         }
 
         public IEnumerable<Uri> ServerUri()

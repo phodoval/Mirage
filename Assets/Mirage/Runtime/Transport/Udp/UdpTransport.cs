@@ -25,11 +25,6 @@ namespace Mirage.UDP
             return new UdpConnection();
         }
 
-        public override void Disconnect()
-        {
-            //
-        }
-
         public override IEnumerable<Uri> ServerUri()
         {
             throw new NotImplementedException();

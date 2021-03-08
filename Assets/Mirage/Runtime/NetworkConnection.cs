@@ -252,6 +252,7 @@ namespace Mirage
         {
             if (messageHandlers.TryGetValue(msgType, out NetworkMessageDelegate msgDelegate))
             {
+                Debug.Log("Invoing msg handler");
                 msgDelegate(this, reader, channelId);
             }
             else

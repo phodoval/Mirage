@@ -106,8 +106,8 @@ namespace Mirage.Tests
         {
             clientConnection?.Disconnect();
             serverConnection?.Disconnect();
-            serverTransport.Disconnect();
-            clientTransport.Disconnect();
+            //serverTransport.Disconnect();
+            //clientTransport.Disconnect();
 
             await listenTask;
             UnityEngine.Object.Destroy(serverTransport.gameObject);

@@ -32,11 +32,6 @@ namespace Mirage
         public UnityEvent Started = new UnityEvent();
 
         /// <summary>
-        /// Stop listening to the port
-        /// </summary>
-        public abstract void Disconnect();
-
-        /// <summary>
         /// Determines if this transport is supported in the current platform
         /// </summary>
         /// <returns>true if the transport works in this platform</returns>

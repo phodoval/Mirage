@@ -274,7 +274,7 @@ namespace Mirage
                 {
                     var buffer = new byte[1200];
                     int length;
-
+                    Debug.Log("Poll client conn");
                     clientConnection.Receive(buffer, out length, out EndPoint test);
                 }
             }
