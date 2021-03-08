@@ -256,6 +256,7 @@ namespace Mirage
         /// <returns>True if message was sent.</returns>
         public void Send<T>(T message, int channelId = Channel.Reliable)
         {
+            Debug.Log("Sending msg " + typeof(T).Name);
             Connection.Send(message, channelId);
         }
 
@@ -273,9 +274,9 @@ namespace Mirage
                 while (clientConnection.Poll())
                 {
                     var buffer = new byte[1200];
-                    int length;
                     Debug.Log("Poll client conn");
-                    clientConnection.Receive(buffer, out length, out EndPoint test);
+                    int channel = clientConnection.Receive(buffer, out int length, out EndPoint test);
+                    ((NetworkConnection)Connection).TransportReceive(new ArraySegment<byte>(buffer, 0, length), channel);
                 }
             }
 

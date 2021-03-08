@@ -245,7 +245,7 @@ namespace Mirage
         {
             NetworkConnection networkConnectionToClient = GetNewConnection(connection);
             ConnectionAccepted(networkConnectionToClient);
-
+            
             return networkConnectionToClient;
         }
 
@@ -296,22 +296,17 @@ namespace Mirage
 
                     if (connectedClients.TryGetValue(endPoint, out NetworkConnection networkConneciton))
                     {
-                        Debug.Log("existing connection " + endPoint);
-                        networkConneciton.TransportReceive(new ArraySegment<byte>(buffer), channel);
+                        networkConneciton.TransportReceive(new ArraySegment<byte>(buffer, 0, length), channel);
                     }
                     else
                     {
-                        Debug.Log("Adding the connection");
                         //TODO Implement hashcashing at server level.
                         IConnection newConnection = Transport.CreateClientConnection();
-
                         newConnection.GetEndPointAddress = endPoint;
 
-                        var networkConnection = TransportConnected(newConnection);
-
-
+                        NetworkConnection networkConnection = TransportConnected(newConnection);
                         connectedClients.Add(endPoint, networkConnection);
-                        TransportConnected(newConnection);
+                        //networkConneciton.TransportReceive(new ArraySegment<byte>(buffer, 0, length), channel);
                     }
                 }
             }
@@ -360,7 +355,6 @@ namespace Mirage
                 // would throw NRE
                 connections.Add(conn);
                 conn.RegisterHandler<NetworkPingMessage>(Time.OnServerPing);
-                Debug.Log("Added connection internally");
             }
         }
 

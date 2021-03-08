@@ -190,6 +190,7 @@ namespace Mirage
                 foreach (INetworkConnection conn in connections)
                 {
                     // send to all connections, but don't wait for them
+                    Debug.Log("Sending " + typeof(T) + " to " + conn);
                     conn.Send(segment, channelId);
                     count++;
                 }
@@ -212,6 +213,7 @@ namespace Mirage
                 // pack message and send allocation free
                 MessagePacker.Pack(msg, writer);
                 NetworkDiagnostics.OnSend(msg, channelId, writer.Length, 1);
+                Debug.Log("Sending message " + typeof(T).Name);
                 Send(writer.ToArraySegment(), channelId);
             }
         }
@@ -252,7 +254,6 @@ namespace Mirage
         {
             if (messageHandlers.TryGetValue(msgType, out NetworkMessageDelegate msgDelegate))
             {
-                Debug.Log("Invoing msg handler");
                 msgDelegate(this, reader, channelId);
             }
             else
@@ -297,6 +298,7 @@ namespace Mirage
                     else
                     {
                         // try to invoke the handler for that message
+                        Debug.Log("Receiving " + MessagePacker.GetMessageType(msgType).Name);
                         InvokeHandler(msgType, networkReader, channelId);
                     }
                 }

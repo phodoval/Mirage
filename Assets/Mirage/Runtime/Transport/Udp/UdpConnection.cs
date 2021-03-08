@@ -31,8 +31,6 @@ namespace Mirage.UDP
 
         public void Bind(EndPoint endPoint = null)
         {
-            Debug.Log("Binding to endpoint " + endPoint);
-
             remoteEndpoint = endPoint ?? new IPEndPoint(IPAddress.IPv6Any, Port);
 
             socket.Bind(remoteEndpoint);
