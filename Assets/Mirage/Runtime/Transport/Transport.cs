@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Events;
@@ -13,13 +12,13 @@ namespace Mirage
     /// </summary>
     public abstract class Transport : MonoBehaviour
     {
-        public class ConnectEvent : UnityEvent<IConnection> { }
+        public class ConnectEvent : UnityEvent<ISocket> { }
 
         public abstract IEnumerable<string> Scheme { get; }
 
-        public abstract IConnection CreateServerConnection();
+        public abstract ISocket CreateServerSocket();
 
-        public abstract IConnection CreateClientConnection();
+        public abstract ISocket CreateClientSocket();
 
         /// <summary>
         /// Event that gets fired when a client is accepted by the transport
@@ -43,7 +42,7 @@ namespace Mirage
         /// <param name="uri">address of the server to connect to</param>
         /// <returns>The connection to the server</returns>
         /// <exception>If connection cannot be established</exception>
-        public abstract UniTask<IConnection> ConnectAsync(Uri uri);
+        public abstract UniTask<ISocket> ConnectAsync(Uri uri);
 
         /// <summary>
         /// Retrieves the address of this server.

@@ -12,9 +12,9 @@ namespace Mirage.Tests
 
         public override bool Supported => true;
 
-        public override UniTask<IConnection> ConnectAsync(Uri uri)
+        public override UniTask<ISocket> ConnectAsync(Uri uri)
         {
-            return UniTask.FromResult<IConnection>(default);
+            return UniTask.FromResult<ISocket>(default);
         }
 
         UniTaskCompletionSource completionSource;
@@ -24,7 +24,7 @@ namespace Mirage.Tests
             completionSource.TrySetResult();
         }*/
 
-        public override IConnection CreateServerConnection()
+        public override ISocket CreateServerSocket()
         {
             Started.Invoke();
 
@@ -33,7 +33,7 @@ namespace Mirage.Tests
             return null;
         }
 
-        public override IConnection CreateClientConnection()
+        public override ISocket CreateClientSocket()
         {
             return null;
         }

@@ -24,7 +24,7 @@ namespace Mirage.Tests.Host
         [Test]
         public void GetNewConnectionTest()
         {
-            Assert.That(client.GetNewConnection(Substitute.For<IConnection>()), Is.Not.Null);
+            Assert.That(client.GetNewConnection(Substitute.For<ISocket>()), Is.Not.Null);
         }
 
         [UnityTest]

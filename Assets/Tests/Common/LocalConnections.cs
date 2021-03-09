@@ -5,7 +5,7 @@ namespace Mirage.Tests
     {
         public static (NetworkConnection, NetworkConnection) PipedConnections()
         {
-            (IConnection c1, IConnection c2) = PipeConnection.CreatePipe();
+            (ISocket c1, ISocket c2) = PipeConnection.CreatePipe();
             var toServer = new NetworkConnection(c2);
             var toClient = new NetworkConnection(c1);
 

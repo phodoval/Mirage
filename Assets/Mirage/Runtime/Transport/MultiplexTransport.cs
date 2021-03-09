@@ -28,7 +28,7 @@ namespace Mirage
 
         public override bool Supported => GetTransport() != null;
 
-        public override UniTask<IConnection> ConnectAsync(Uri uri)
+        public override UniTask<ISocket> ConnectAsync(Uri uri)
         {
             foreach (Transport transport in transports)
             {
@@ -53,13 +53,13 @@ namespace Mirage
             }
         }
 
-        public override IConnection CreateServerConnection()
+        public override ISocket CreateServerSocket()
         {
             return null;
             //return UniTask.WhenAll(transports.Select(t => t.ListenAsync()));
         }
 
-        public override IConnection CreateClientConnection()
+        public override ISocket CreateClientSocket()
         {
             return null;
         }

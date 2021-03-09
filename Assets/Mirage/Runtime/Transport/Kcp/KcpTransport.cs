@@ -46,7 +46,7 @@ namespace Mirage.KCP
         /// </summary>
         /// <exception>If we cannot start the transport</exception>
         /// <returns></returns>
-        public override IConnection CreateServerConnection()
+        public override ISocket CreateServerSocket()
         {
             socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) {DualMode = true};
             socket.Bind(new IPEndPoint(IPAddress.IPv6Any, Port));
@@ -60,7 +60,7 @@ namespace Mirage.KCP
             return new KcpServerConnection(socket, newClientEP, delayMode, SendWindowSize, ReceiveWindowSize);
         }
 
-        public override IConnection CreateClientConnection()
+        public override ISocket CreateClientSocket()
         {
             return new KcpClientConnection(delayMode, SendWindowSize, ReceiveWindowSize);
         }
@@ -239,13 +239,13 @@ namespace Mirage.KCP
         /// <param name="uri">address of the server to connect to</param>
         /// <returns>The connection to the server</returns>
         /// <exception>If connection cannot be established</exception>
-        public override UniTask<IConnection> ConnectAsync(Uri uri)
+        public override UniTask<ISocket> ConnectAsync(Uri uri)
         {
             ushort port = (ushort)(uri.IsDefaultPort? Port : uri.Port);
             return ConnectAsync(uri.Host, port);
         }
 
-        private async UniTask<IConnection> ConnectAsync(string host, ushort port)
+        private async UniTask<ISocket> ConnectAsync(string host, ushort port)
         {
             IPAddress[] ipAddress = await Dns.GetHostAddressesAsync(host);
             if (ipAddress.Length < 1)
@@ -259,7 +259,7 @@ namespace Mirage.KCP
                 socket = new Socket(remoteEndpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             }
 
-            var completionSource = new UniTaskCompletionSource<IConnection>();
+            var completionSource = new UniTaskCompletionSource<ISocket>();
 
             var connection = new KcpClientConnection( delayMode, SendWindowSize, ReceiveWindowSize)
             {

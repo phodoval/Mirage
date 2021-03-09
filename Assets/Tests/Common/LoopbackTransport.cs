@@ -9,20 +9,20 @@ namespace Mirage.Tests
 
     public class LoopbackTransport : Transport
     {
-        public readonly Channel<IConnection> AcceptConnections = Cysharp.Threading.Tasks.Channel.CreateSingleConsumerUnbounded<IConnection>();
+        public readonly Channel<ISocket> AcceptConnections = Cysharp.Threading.Tasks.Channel.CreateSingleConsumerUnbounded<ISocket>();
 
         public override IEnumerable<string> Scheme => new[] { "local" };
 
         public override bool Supported => true;
 
-        IConnection clientConnection;
-        IConnection serverConnection;
+        ISocket clientConnection;
+        ISocket serverConnection;
 
-        public override UniTask<IConnection> ConnectAsync(Uri uri)
+        public override UniTask<ISocket> ConnectAsync(Uri uri)
         {
             (clientConnection, serverConnection) = PipeConnection.CreatePipe();
             Connected.Invoke(serverConnection);
-            return UniTask.FromResult<IConnection>(clientConnection);
+            return UniTask.FromResult<ISocket>(clientConnection);
         }
 
         UniTaskCompletionSource listenCompletionSource;
@@ -32,7 +32,7 @@ namespace Mirage.Tests
             listenCompletionSource?.TrySetResult();
         }*/
 
-        public override IConnection CreateServerConnection()
+        public override ISocket CreateServerSocket()
         {
             //Started.Invoke();
             //listenCompletionSource = new UniTaskCompletionSource();
@@ -40,7 +40,7 @@ namespace Mirage.Tests
             return null;
         }
 
-        public override IConnection CreateClientConnection()
+        public override ISocket CreateClientSocket()
         {
             return null;
         }

@@ -11,7 +11,7 @@ namespace Mirage
     /// A connection that is directly connected to another connection
     /// If you send data in one of them,  you receive it on the other one
     /// </summary>
-    public class PipeConnection : IConnection
+    public class PipeConnection : ISocket
     {
 
         private PipeConnection connected;
@@ -26,7 +26,7 @@ namespace Mirage
         // buffer where we can queue up data
         readonly NetworkWriter writer = new NetworkWriter();
 
-        public static (IConnection, IConnection) CreatePipe()
+        public static (ISocket, ISocket) CreatePipe()
         {
             var c1 = new PipeConnection();
             var c2 = new PipeConnection();
@@ -80,7 +80,7 @@ namespace Mirage
         public bool Supported { get; set; }
         public long ReceivedBytes { get; set; }
         public long SentBytes { get; set; }
-        public IConnection Connect(Uri uri)
+        public ISocket Connect(Uri uri)
         {
             throw new NotImplementedException();
         }

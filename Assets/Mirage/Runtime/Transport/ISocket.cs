@@ -20,7 +20,7 @@ namespace Mirage
         public byte[] Data;
         public PacketType PacketType;
         public int Length;
-        public IConnection Connection;
+        public ISocket Connection;
     }
 
     public enum PacketType
@@ -31,7 +31,7 @@ namespace Mirage
         Connect,
     }
 
-    public interface IConnection
+    public interface ISocket
     {
         IEnumerable<string> Scheme { get; }
 
@@ -57,7 +57,7 @@ namespace Mirage
         /// </summary>
         /// <exception>If we cannot start the transport</exception>
         /// <returns></returns>
-        void Bind(EndPoint endpoint);
+        void Bind(EndPoint endpoint = null);
 
         bool Poll();
 
@@ -83,7 +83,7 @@ namespace Mirage
         /// <param name="uri">address of the server to connect to</param>
         /// <returns>The connection to the server</returns>
         /// <exception>If connection cannot be established</exception>
-        IConnection Connect(Uri uri);
+        ISocket Connect(Uri uri);
 
         /// <summary>
         /// Retrieves the address of this server.

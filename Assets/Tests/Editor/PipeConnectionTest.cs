@@ -10,8 +10,8 @@ namespace Mirage
     public class AsyncPipeConnectionTest
     {
 
-        IConnection c1;
-        IConnection c2;
+        ISocket c1;
+        ISocket c2;
 
         [SetUp]
         public void Setup()
@@ -19,13 +19,13 @@ namespace Mirage
             (c1, c2) = PipeConnection.CreatePipe();
         }
 
-        private static void SendData(IConnection c, byte[] data)
+        private static void SendData(ISocket c, byte[] data)
         {
             c.Send(new ArraySegment<byte>(data));
         }
 
 
-        private static List<byte[]> ReceiveAll(IConnection connection)
+        private static List<byte[]> ReceiveAll(ISocket connection)
         {
             var packets = new List<byte[]>();
 

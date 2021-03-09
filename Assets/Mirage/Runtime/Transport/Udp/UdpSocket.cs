@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Mirage.UDP
 {
-    public class UdpConnection : IConnection
+    public class UdpSocket : ISocket
     {
         Socket socket;
         ushort Port = 25565;
@@ -20,7 +20,7 @@ namespace Mirage.UDP
 
         public long SentBytes => 0;
 
-        public UdpConnection() {
+        public UdpSocket() {
             socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) { Blocking = false };
             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.ReuseAddress, true);
 
@@ -36,7 +36,7 @@ namespace Mirage.UDP
             socket.Bind(remoteEndpoint);
         }
 
-        public IConnection Connect(Uri uri)
+        public ISocket Connect(Uri uri)
         {
             ushort port = (ushort)(uri.IsDefaultPort ? Port : uri.Port);
             IPAddress[] ipAddress = Dns.GetHostAddresses(uri.Host);

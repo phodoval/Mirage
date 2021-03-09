@@ -21,8 +21,8 @@ namespace Mirage.Tests
         private Transport transport1;
         private Transport transport2;
 
-        IConnection conn1;
-        IConnection conn2;
+        ISocket conn1;
+        ISocket conn2;
 
         [SetUp]
         public void Setup()
@@ -39,8 +39,8 @@ namespace Mirage.Tests
             transport2.Supported.Returns(true);
 
             transport.transports = new[] { transport1, transport2 };
-            conn1 = Substitute.For<IConnection>();
-            conn2 = Substitute.For<IConnection>();
+            conn1 = Substitute.For<ISocket>();
+            conn2 = Substitute.For<ISocket>();
 
             transport.Start();
         }
@@ -55,7 +55,7 @@ namespace Mirage.Tests
         [Test]
         public void AcceptTransport1()
         {
-            UnityAction<IConnection> connectedDelegate = Substitute.For<UnityAction<IConnection>>();
+            UnityAction<ISocket> connectedDelegate = Substitute.For<UnityAction<ISocket>>();
 
             transport.Connected.AddListener(connectedDelegate);
             transport1.Connected.Invoke(conn1);
@@ -66,7 +66,7 @@ namespace Mirage.Tests
         [Test]
         public void AcceptTransport2()
         {
-            UnityAction<IConnection> connectedDelegate = Substitute.For<UnityAction<IConnection>>();
+            UnityAction<ISocket> connectedDelegate = Substitute.For<UnityAction<ISocket>>();
             transport.Connected.AddListener(connectedDelegate);
 
             transport2.Connected.Invoke(conn1);
@@ -77,7 +77,7 @@ namespace Mirage.Tests
         [Test]
         public void AcceptMultiple()
         {
-            UnityAction<IConnection> connectedDelegate = Substitute.For<UnityAction<IConnection>>();
+            UnityAction<ISocket> connectedDelegate = Substitute.For<UnityAction<ISocket>>();
             transport.Connected.AddListener(connectedDelegate);
 
             transport1.Connected.Invoke(conn1);
@@ -90,7 +90,7 @@ namespace Mirage.Tests
         [Test]
         public void AcceptUntilAllGone()
         {
-            UnityAction<IConnection> connectedDelegate = Substitute.For<UnityAction<IConnection>>();
+            UnityAction<ISocket> connectedDelegate = Substitute.For<UnityAction<ISocket>>();
             transport.Connected.AddListener(connectedDelegate);
 
             transport1.Connected.Invoke(conn1);
@@ -104,12 +104,12 @@ namespace Mirage.Tests
         [UnityTest]
         public IEnumerator Listen() => UniTask.ToCoroutine(async () =>
         {
-            transport1.CreateServerConnection();//.Returns(UniTask.CompletedTask);
-            transport2.CreateServerConnection();//.Returns(UniTask.CompletedTask);
+            transport1.CreateServerSocket();//.Returns(UniTask.CompletedTask);
+            transport2.CreateServerSocket();//.Returns(UniTask.CompletedTask);
             //transport.CreateServerConnection();
 
-            transport1.Received().CreateServerConnection();
-            transport2.Received().CreateClientConnection();
+            transport1.Received().CreateServerSocket();
+            transport2.Received().CreateClientSocket();
 
         });
 
@@ -157,13 +157,13 @@ namespace Mirage.Tests
             transport2.Scheme.Returns(new[] { "kcp" });
 
             transport1.ConnectAsync(Arg.Any<Uri>())
-                .Returns(UniTask.FromException<IConnection>(new ArgumentException("Invalid protocol")));
+                .Returns(UniTask.FromException<ISocket>(new ArgumentException("Invalid protocol")));
 
             // transport2 gives a connection
             transport2.ConnectAsync(Arg.Any<Uri>())
                 .Returns(UniTask.FromResult(conn2));
 
-            IConnection accepted1 = await transport.ConnectAsync(new Uri("kcp://localhost"));
+            ISocket accepted1 = await transport.ConnectAsync(new Uri("kcp://localhost"));
 
             Assert.That(accepted1, Is.SameAs(conn2));
         });
@@ -172,11 +172,11 @@ namespace Mirage.Tests
         public IEnumerator CannotConnect() => UniTask.ToCoroutine(async () =>
         {
             transport1.ConnectAsync(Arg.Any<Uri>())
-                .Returns(UniTask.FromException<IConnection>(new ArgumentException("Invalid protocol")));
+                .Returns(UniTask.FromException<ISocket>(new ArgumentException("Invalid protocol")));
 
             // transport2 gives a connection
             transport2.ConnectAsync(Arg.Any<Uri>())
-                .Returns(UniTask.FromException<IConnection>(new ArgumentException("Invalid protocol")));
+                .Returns(UniTask.FromException<ISocket>(new ArgumentException("Invalid protocol")));
 
             try
             {

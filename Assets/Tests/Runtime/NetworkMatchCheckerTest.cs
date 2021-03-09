@@ -63,7 +63,7 @@ namespace Mirage.Tests
 
         static NetworkConnection CreateNetworkConnection(GameObject player)
         {
-            (IConnection conn1, IConnection _) = PipeConnection.CreatePipe();
+            (ISocket conn1, ISocket _) = PipeConnection.CreatePipe();
 
             var connection = new NetworkConnection(conn1)
             {

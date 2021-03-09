@@ -161,8 +161,8 @@ namespace Mirage
         private ServerObjectManager serverObjectManager;
         private GameObject networkServerGameObject;
 
-        IConnection tconn42;
-        IConnection tconn43;
+        ISocket tconn42;
+        ISocket tconn43;
 
         [SetUp]
         public void SetUp()
@@ -178,8 +178,8 @@ namespace Mirage
             identity.Server = server;
             identity.ServerObjectManager = serverObjectManager;
 
-            tconn42 = Substitute.For<IConnection>();
-            tconn43 = Substitute.For<IConnection>();
+            tconn42 = Substitute.For<ISocket>();
+            tconn43 = Substitute.For<ISocket>();
         }
 
         [TearDown]

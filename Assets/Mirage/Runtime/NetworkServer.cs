@@ -102,9 +102,9 @@ namespace Mirage
         /// </summary>
         public NetworkClient LocalClient { get; private set; }
 
-        private IConnection localTransportConnection;
+        private ISocket localTransportConnection;
 
-        private IConnection serverConnection;
+        private ISocket serverSocket;
 
         /// <summary>
         /// True if there is a local client connected to this server (host mode)
@@ -164,8 +164,8 @@ namespace Mirage
             {
                 conn.Disconnect();
             }
-            if (serverConnection != null)
-                serverConnection.Disconnect();
+            if (serverSocket != null)
+                serverSocket.Disconnect();
         }
 
         void Initialize()
@@ -216,8 +216,8 @@ namespace Mirage
                     //Transport.Started.AddListener(TransportStarted);
                     //Transport.Connected.AddListener(TransportConnected);
 
-                    serverConnection = Transport.CreateServerConnection();
-                    serverConnection.Bind(null);
+                    serverSocket = Transport.CreateServerSocket();
+                    serverSocket.Bind();
                     TransportStarted();
                 }
             }
@@ -241,7 +241,7 @@ namespace Mirage
             Started?.Invoke();
         }
 
-        private NetworkConnection TransportConnected(IConnection connection)
+        private NetworkConnection TransportConnected(ISocket connection)
         {
             NetworkConnection networkConnectionToClient = GetNewConnection(connection);
             ConnectionAccepted(networkConnectionToClient);
@@ -288,11 +288,11 @@ namespace Mirage
             {
                 localTransportConnection?.Poll();
 
-                while(serverConnection.Poll())
+                while(serverSocket.Poll())
                 {
                     var buffer = new byte[1200];
 
-                    int channel = serverConnection.Receive(buffer, out int length, out EndPoint endPoint);
+                    int channel = serverSocket.Receive(buffer, out int length, out EndPoint endPoint);
 
                     if (connectedClients.TryGetValue(endPoint, out NetworkConnection networkConneciton))
                     {
@@ -301,7 +301,7 @@ namespace Mirage
                     else
                     {
                         //TODO Implement hashcashing at server level.
-                        IConnection newConnection = Transport.CreateClientConnection();
+                        ISocket newConnection = Transport.CreateClientSocket();
                         newConnection.GetEndPointAddress = endPoint;
 
                         NetworkConnection networkConnection = TransportConnected(newConnection);
@@ -337,7 +337,7 @@ namespace Mirage
         /// <summary>
         /// Creates a new INetworkConnection based on the provided IConnection.
         /// </summary>
-        public virtual NetworkConnection GetNewConnection(IConnection connection)
+        public virtual NetworkConnection GetNewConnection(ISocket connection)
         {
             return new NetworkConnection(connection);
         }
@@ -372,7 +372,7 @@ namespace Mirage
         /// </summary>
         /// <param name="client">The local client</param>
         /// <param name="tconn">The connection to the client</param>
-        internal void SetLocalConnection(NetworkClient client, IConnection tconn)
+        internal void SetLocalConnection(NetworkClient client, ISocket tconn)
         {
             if (LocalConnection != null)
             {

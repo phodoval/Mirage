@@ -38,8 +38,8 @@ namespace Mirage.Tests
             this.port = port;
         }
 
-        IConnection clientConnection;
-        IConnection serverConnection;
+        ISocket clientConnection;
+        ISocket serverConnection;
 
 
         Queue<(byte[] data, int channel)> clientMessages;
@@ -59,7 +59,7 @@ namespace Mirage.Tests
             clientTransportObj = new GameObject("Client Transport");
             clientTransport = clientTransportObj.AddComponent<T>();
 
-            UniTask<IConnection> connectTask = clientTransport.ConnectAsync(uri).Timeout(TimeSpan.FromSeconds(2));
+            UniTask<ISocket> connectTask = clientTransport.ConnectAsync(uri).Timeout(TimeSpan.FromSeconds(2));
 
             while (!connectTask.Status.IsCompleted() || serverConnection == null)
             {

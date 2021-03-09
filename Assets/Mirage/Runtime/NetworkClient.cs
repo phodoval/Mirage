@@ -68,7 +68,7 @@ namespace Mirage
         /// <summary>
         /// connection to the server
         /// </summary>
-        private IConnection localTransportConnection;
+        private ISocket localTransportConnection;
 
         /// <summary>
         /// NetworkIdentity of the localPlayer
@@ -102,7 +102,7 @@ namespace Mirage
         /// </summary>
         public bool IsLocalClient {get; private set; }
 
-        IConnection clientConnection;
+        ISocket clientSocket;
 
         /// <summary>
         /// Connect client to a NetworkServer instance.
@@ -152,13 +152,13 @@ namespace Mirage
 
             try
             {
-                clientConnection = Transport.CreateClientConnection();
-                clientConnection.Connect(uri);
+                clientSocket = Transport.CreateClientSocket();
+                clientSocket.Connect(uri);
 
                 InitializeAuthEvents();
 
                 // setup all the handlers
-                Connection = GetNewConnection(clientConnection);
+                Connection = GetNewConnection(clientSocket);
                 Time.Reset();
 
                 RegisterMessageHandlers();
@@ -180,7 +180,7 @@ namespace Mirage
             InitializeAuthEvents();
 
             // create local connection objects and connect them
-            (IConnection c1, IConnection c2) = PipeConnection.CreatePipe();
+            (ISocket c1, ISocket c2) = PipeConnection.CreatePipe();
 
             server.SetLocalConnection(this, c2);
             IsLocalClient = true;
@@ -195,7 +195,7 @@ namespace Mirage
         /// <summary>
         /// Creates a new INetworkConnection based on the provided IConnection.
         /// </summary>
-        public virtual INetworkConnection GetNewConnection(IConnection connection)
+        public virtual INetworkConnection GetNewConnection(ISocket connection)
         {
             return new NetworkConnection(connection);
         }
@@ -271,11 +271,11 @@ namespace Mirage
                 // dispatch all received messages
                 localTransportConnection?.Poll();
 
-                while (clientConnection.Poll())
+                while (clientSocket.Poll())
                 {
                     var buffer = new byte[1200];
                     Debug.Log("Poll client conn");
-                    int channel = clientConnection.Receive(buffer, out int length, out EndPoint test);
+                    int channel = clientSocket.Receive(buffer, out int length, out EndPoint test);
                     ((NetworkConnection)Connection).TransportReceive(new ArraySegment<byte>(buffer, 0, length), channel);
                 }
             }

@@ -29,8 +29,8 @@ namespace Mirage.Tests
         private NetworkClient client;
         private GameObject networkServerGameObject;
 
-        IConnection tconn42;
-        IConnection tconn43;
+        ISocket tconn42;
+        ISocket tconn43;
 
         [SetUp]
         public void SetUp()
@@ -46,8 +46,8 @@ namespace Mirage.Tests
             identity.Server = server;
             identity.ServerObjectManager = serverObjectManager;
 
-            tconn42 = Substitute.For<IConnection>();
-            tconn43 = Substitute.For<IConnection>();
+            tconn42 = Substitute.For<ISocket>();
+            tconn43 = Substitute.For<ISocket>();
         }
 
         [TearDown]
@@ -70,7 +70,7 @@ namespace Mirage.Tests
             server.connections.Add(connection2);
 
             // add a host connection
-            (_, IConnection localConnection) = PipeConnection.CreatePipe();
+            (_, ISocket localConnection) = PipeConnection.CreatePipe();
 
             server.SetLocalConnection(client, localConnection);
             server.LocalConnection.IsReady = true;

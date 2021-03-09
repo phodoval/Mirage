@@ -10,19 +10,19 @@ namespace Mirage.UDP
 
         public override bool Supported => throw new NotImplementedException();
 
-        public override UniTask<IConnection> ConnectAsync(Uri uri)
+        public override UniTask<ISocket> ConnectAsync(Uri uri)
         {
             throw new NotImplementedException();
         }
 
-        public override IConnection CreateClientConnection()
+        public override ISocket CreateClientSocket()
         {
-            return new UdpConnection();
+            return new UdpSocket();
         }
 
-        public override IConnection CreateServerConnection()
+        public override ISocket CreateServerSocket()
         {
-            return new UdpConnection();
+            return new UdpSocket();
         }
 
         public override IEnumerable<Uri> ServerUri()

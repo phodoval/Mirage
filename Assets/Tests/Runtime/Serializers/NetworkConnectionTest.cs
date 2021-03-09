@@ -9,7 +9,7 @@ namespace Mirage.Tests
     {
         private NetworkConnection connection;
         private byte[] serializedMessage;
-        private IConnection mockTransportConnection;
+        private ISocket mockTransportConnection;
 
         private SceneMessage data;
 
@@ -26,7 +26,7 @@ namespace Mirage.Tests
         public void SetUp()
         {
             data = new SceneMessage();
-            mockTransportConnection = Substitute.For<IConnection>();
+            mockTransportConnection = Substitute.For<ISocket>();
 
             void ParsePacket(ArraySegment<byte> data)
             {

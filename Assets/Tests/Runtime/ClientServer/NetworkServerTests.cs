@@ -115,7 +115,7 @@ namespace Mirage.Tests.ClientServer
         [Test]
         public void GetNewConnectionTest()
         {
-            Assert.That(server.GetNewConnection(Substitute.For<IConnection>()), Is.Not.Null);
+            Assert.That(server.GetNewConnection(Substitute.For<ISocket>()), Is.Not.Null);
         }
 
         [Test]

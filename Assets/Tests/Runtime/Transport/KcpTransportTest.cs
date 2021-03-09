@@ -65,7 +65,7 @@ namespace Mirage.Tests
 
             testUri = uriBuilder.Uri;
 
-            UniTask<IConnection> connectTask = clientTransport.ConnectAsync(uriBuilder.Uri).Timeout(TimeSpan.FromSeconds(2));
+            UniTask<ISocket> connectTask = clientTransport.ConnectAsync(uriBuilder.Uri).Timeout(TimeSpan.FromSeconds(2));
 
             // If we don't poll the transports,  they won't open the connection as they don't process
             // data on their own

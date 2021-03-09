@@ -10,7 +10,7 @@ using Debug = UnityEngine.Debug;
 
 namespace Mirage.KCP
 {
-    public abstract class KcpConnection : IConnection
+    public abstract class KcpConnection : ISocket
     {
 
         enum State
@@ -284,7 +284,7 @@ namespace Mirage.KCP
         public bool Supported { get; set; }
         public long ReceivedBytes { get; set; }
         public long SentBytes { get; set; }
-        public IConnection Connect(Uri uri)
+        public ISocket Connect(Uri uri)
         {
             throw new NotImplementedException();
         }
